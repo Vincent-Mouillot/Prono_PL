@@ -1,0 +1,18 @@
+Package: Prono_pl
+Type: Project
+Title: Prono pl
+Version: 0.1.0
+Author: Mouillot Vincent
+Description: None
+License: MIT
+Imports:
+    dplyr,
+	stringr,
+	rvest,
+	purrr,
+	tidyr,
+	progress,
+	DBI,
+	RSQLite,
+	glue,
+	taskscheduleR,

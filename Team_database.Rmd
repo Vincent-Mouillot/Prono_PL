@@ -1,0 +1,81 @@
+# Import library
+```{r}
+library(dplyr)
+library(stringr)
+library(rvest)
+library(purrr)
+library(tidyr)
+library(vroom)
+library(DBI)
+library(RSQLite)
+```
+
+# Read web page
+```{r}
+url <- "https://fbref.com/en/country/clubs/ENG/England-Football-Clubs"
+
+# Send a GET request to the URL and read the HTML content
+page <- read_html(url)
+```
+
+# Get all the team from Premier league
+```{r}
+team_id <- page %>%
+  html_elements("th.left[data-stat='team'] a") %>%
+  html_attr("href") %>%
+  str_sub(12, 19)
+
+teams <- page %>% 
+  html_element("table") %>%
+  html_table() %>% 
+  mutate(Id = team_id) %>% 
+  select(Id, 
+         Squad,
+         Gender,
+         Comp,
+         Other_Names = `Other Names`) %>% 
+  filter(Comp != "",
+         Comp != "Premier League 2") %>% 
+  mutate(Other_Names = Squad %>%
+           str_remove("\\b(FC|AFC)\\b")%>%
+           str_trim(side = "right"))
+```
+
+# Get the location of stadium
+```{r}
+df_stadium <- vroom("English_stadiums.csv") 
+
+df_stadium <- df_stadium %>% 
+  mutate(clubLabel = str_replace_all(clubLabel, "\\.", "") %>%
+           str_remove("\\b(FC|AFC)\\b") %>%  # Adjusted to match the pattern without dots
+           str_trim(side = "right")) %>% 
+  rename(Other_Names = clubLabel,
+         Venue_Name = venueLabel)
+```
+
+```{r}
+teams <- teams %>% 
+  left_join(df_stadium, by="Other_Names")
+```
+
+
+
+# Write the table in a database
+
+```{r}
+# Define the name of the SQLite database file
+sqlite_file <- "my_database.db"
+
+# Connect to the SQLite database
+con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
+
+# Drop the table if it already exists
+dbExecute(con, "DROP TABLE IF EXISTS Table_teams;")
+
+# Write the DataFrame to the SQLite database as a table
+dbWriteTable(con, "Table_teams", teams, overwrite = TRUE, row.names = FALSE)
+
+# Close the database connection
+dbDisconnect(con)
+```
+
