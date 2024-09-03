@@ -53,7 +53,7 @@ class <- class %>%
   rename(!!matchday := Rk)
 
 # Define the name of the SQLite database file
-sqlite_file <- "C:/Users/vmoui/OneDrive/Bureau/Prono_sport/my_database.db"
+sqlite_file <- "my_database.db"
 
 # Function to perform database operations
 perform_db_operations <- function() {

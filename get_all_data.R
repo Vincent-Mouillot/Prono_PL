@@ -9,8 +9,6 @@ library(RSQLite)
 library(glue)
 library(taskscheduleR)
 
-source("C:/Users/vmoui/OneDrive/Bureau/Prono_sport/get_calendrier.R")
-
 clean_labels <- function(labels) {
   # Remove NA values
   labels <- na.omit(labels)
@@ -92,7 +90,7 @@ get_all_player_data <- function(url) {
 # Define the function to perform database operations
 perform_db_operations <- function() {
   # Define the name of the SQLite database file
-  sqlite_file <- "C:/Users/vmoui/OneDrive/Bureau/Prono_sport/my_database.db"
+  sqlite_file <- "my_database.db"
   
   # Check if the database file exists
   if (!file.exists(sqlite_file)) {
@@ -180,6 +178,3 @@ perform_db_operations <- function() {
 
 # Call the function
 perform_db_operations()
-
-
-results %>% write.csv("All_data_players_new.csv", row.names = FALSE)

@@ -44,7 +44,7 @@ calendrier <- page_calend %>% html_element("table") %>% html_table() %>%
 # Define the function to perform the database operations
 perform_db_operations <- function() {
   # Define the name of the SQLite database file
-  sqlite_file <- "C:/Users/vmoui/OneDrive/Bureau/Prono_sport/my_database.db"
+  sqlite_file <- "my_database.db"
   
   # Check if the database file exists
   if (!file.exists(sqlite_file)) {
