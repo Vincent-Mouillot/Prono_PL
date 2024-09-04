@@ -1,9 +1,11 @@
 library(DBI)
 library(RSQLite)
 library(tidyverse)
+library(rprojroot)
 
+root <- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
-sqlite_file <- "my_database.db"
+sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
 con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
 
