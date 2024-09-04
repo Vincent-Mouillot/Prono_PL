@@ -7,7 +7,6 @@ library(progress)
 library(DBI)
 library(RSQLite)
 library(glue)
-library(taskscheduleR)
 
 url <- "https://fbref.com/en/comps/9/calendrier/Scores-et-tableaux-Premier-League"
 page_calend <- read_html(url)
@@ -16,35 +15,36 @@ match_report_links <- page_calend %>% html_elements(xpath = "//a[contains(., 'Ma
 # Extract the href attribute (link) of each matched link
 report_links <- match_report_links %>% html_attr("href")
 
-calendrier <- page_calend %>% html_element("table") %>% html_table() %>% 
-  select(Wk, 
-         Day,
-         Date,
-         Time,
-         Home,
-         Score,
-         Away,
-         Attendance,
-         Referee) %>% 
-  filter(!is.na(Wk)) %>% 
-  separate(Score, into = c("score_home", "score_away"), sep = "–", convert = TRUE) %>% 
+calendrier <- page_calend %>% html_element("table") %>% html_table() %>%
+  select(Wk, Day, Date, Time, Home, Score, Away, Attendance, Referee) %>%
+  filter(!is.na(Wk)) %>%
+  separate(
+    Score,
+    into = c("score_home", "score_away"),
+    sep = "–",
+    convert = TRUE
+  ) %>%
   mutate(
     result = case_when(
       score_home > score_away ~ "H",
       score_home < score_away ~ "A",
       score_home == score_away ~ "D"
     ),
-    link = paste0("https://fbref.com/",
-                  if_else(row_number() <= length(report_links), 
-                          report_links[row_number()], 
-                          NA_character_)),
+    link = paste0(
+      "https://fbref.com/",
+      if_else(
+        row_number() <= length(report_links),
+        report_links[row_number()],
+        NA_character_
+      )
+    ),
     id = str_extract(link, "[[:alnum:]]{8}")
   )
 
 # Define the function to perform the database operations
 perform_db_operations <- function() {
   # Define the name of the SQLite database file
-  sqlite_file <- "my_database.db"
+  sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
   
   # Check if the database file exists
   if (!file.exists(sqlite_file)) {
@@ -61,7 +61,8 @@ perform_db_operations <- function() {
   })
   
   # Stop execution if connection failed
-  if (is.null(con)) return(NULL)
+  if (is.null(con))
+    return(NULL)
   
   # Drop the table if it already exists
   tryCatch({
@@ -82,7 +83,11 @@ perform_db_operations <- function() {
   
   # Write the DataFrame to the SQLite database as a table
   tryCatch({
-    dbWriteTable(con, "Calendrier", calendrier, overwrite = TRUE, row.names = FALSE)
+    dbWriteTable(con,
+                 "Calendrier",
+                 calendrier,
+                 overwrite = TRUE,
+                 row.names = FALSE)
   }, error = function(e) {
     message("Error: Could not write the DataFrame to the database.")
     message("Details: ", e$message)
