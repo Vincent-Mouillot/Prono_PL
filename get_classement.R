@@ -7,14 +7,29 @@ library(progress)
 library(DBI)
 library(RSQLite)
 library(glue)
-library(taskscheduleR)
 
 df <- data.frame(
   Squad = c(
-    "Manchester City", "Arsenal", "Liverpool", "Aston Villa", "Tottenham", 
-    "Chelsea", "Newcastle Utd", "Manchester Utd", "West Ham", "Crystal Palace", 
-    "Brighton", "Bournemouth", "Fulham", "Wolves", "Everton", 
-    "Brentford", "Nott'ham Forest", "Leicester City", "Ipswich Town", "Southampton"
+    "Manchester City",
+    "Arsenal",
+    "Liverpool",
+    "Aston Villa",
+    "Tottenham",
+    "Chelsea",
+    "Newcastle Utd",
+    "Manchester Utd",
+    "West Ham",
+    "Crystal Palace",
+    "Brighton",
+    "Bournemouth",
+    "Fulham",
+    "Wolves",
+    "Everton",
+    "Brentford",
+    "Nott'ham Forest",
+    "Leicester City",
+    "Ipswich Town",
+    "Southampton"
   ),
   J0 = 1:20
 ) %>% arrange(Squad)
@@ -25,18 +40,15 @@ url <- "https://fbref.com/en/comps/9/Premier-League-Stats"
 page_classement <- read_html(url)
 
 team_id <- page_classement %>%
-  html_node("#results2024-202591_overall") %>%  # Select the table by its ID
-  html_nodes('td[data-stat="team"] a') %>%  # Select <a> tags within <td> elements that have the attribute data-stat="team"
+  html_node("#results2024-202591_overall") %>%
+  html_nodes('td[data-stat="team"] a') %>%
   html_attr("href") %>%
   str_sub(12, 19)
 
-class <- page_classement %>% 
-  html_element("#results2024-202591_overall") %>% 
-  html_table() %>% 
-  select(
-    Rk,
-    MP
-  ) %>% 
+class <- page_classement %>%
+  html_element("#results2024-202591_overall") %>%
+  html_table() %>%
+  select(Rk, MP) %>%
   mutate(Id = team_id)
 
 # Assuming your DataFrame is named "df"
@@ -49,11 +61,11 @@ most_common_value <- class %>%
 matchday <- paste0("J", most_common_value)
 
 class <- class %>%
-  select(Id, Rk) %>% 
+  select(Id, Rk) %>%
   rename(!!matchday := Rk)
 
 # Define the name of the SQLite database file
-sqlite_file <- "my_database.db"
+sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
 # Function to perform database operations
 perform_db_operations <- function() {
@@ -89,6 +101,7 @@ perform_db_operations <- function() {
     table_class <- test_column
   }
   
+  
   # Example: Assuming 'class' is a predefined DataFrame that needs to be joined
   if (exists("class")) {
     table_class <- table_class %>%
@@ -99,7 +112,11 @@ perform_db_operations <- function() {
   
   # Drop the table if it already exists and write the new data
   dbExecute(con, "DROP TABLE IF EXISTS Classement;")
-  dbWriteTable(con, "Classement", table_class, overwrite = TRUE, row.names = FALSE)
+  dbWriteTable(con,
+               "Classement",
+               table_class,
+               overwrite = TRUE,
+               row.names = FALSE)
   
   # Close the database connection
   dbDisconnect(con)

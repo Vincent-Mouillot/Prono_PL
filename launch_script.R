@@ -1,5 +1,13 @@
-source("get_calendrier.R")
+if (!requireNamespace("rprojroot", quietly = TRUE)) {
+  install.packages("rprojroot")
+}
 
-source("get_all_data.R")
+library(rprojroot)
 
-source("get_classement.R")
+root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
+
+source(file.path(root, "Prono_PL", "get_calendrier.R"))
+
+source(file.path(root, "Prono_PL", "get_all_data.R"))
+
+source(file.path(root, "Prono_PL", "get_classement.R"))

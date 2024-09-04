@@ -7,7 +7,6 @@ library(progress)
 library(DBI)
 library(RSQLite)
 library(glue)
-library(taskscheduleR)
 
 clean_labels <- function(labels) {
   # Remove NA values
@@ -29,19 +28,19 @@ clean_labels <- function(labels) {
 get_all_player_data <- function(url) {
   page <- read_html(url)
   
-  game_id <- url %>% 
+  game_id <- url %>%
     str_extract("[[:alnum:]]{8}")
   
-  info <- page %>% 
+  info <- page %>%
     html_elements("strong a") %>%
-    html_attr("href") 
+    html_attr("href")
   
-  squad_home <- info[1] %>% 
+  squad_home <- info[1] %>%
     str_split_1("/")
   
   squad_home_id <- squad_home[4]
   
-  squad_away <- info[2] %>% 
+  squad_away <- info[2] %>%
     str_split_1("/")
   
   squad_away_id <- squad_away[4]
@@ -52,37 +51,51 @@ get_all_player_data <- function(url) {
     html_attr("aria-label")
   
   # Clean and filter the extracted labels
-  na_to_na_list <- lapply(split(aria_labels, cumsum(is.na(aria_labels))),
-                          clean_labels) %>%
-    Filter(function(x) length(x) > 2, .)
+  na_to_na_list <- lapply(split(aria_labels, cumsum(is.na(aria_labels))), clean_labels) %>%
+    Filter(function(x)
+      length(x) > 2, .)
   
   # Extract and rename tables
   tables <- page %>%
     html_elements("tbody") %>%
     html_table() %>%
-    map2(na_to_na_list, ~ { colnames(.x) <- .y; .x })
+    map2(na_to_na_list, ~ {
+      colnames(.x) <- .y
+      .x
+    })
   
   # Define keys for inner join
-  keys <- c("Player", "Shirt_Number", "Nation", "Position", "Age", "Minutes")
+  keys <- c("Player",
+            "Shirt_Number",
+            "Nation",
+            "Position",
+            "Age",
+            "Minutes")
   
   # Perform inner join on the first to the sixth table
-  home_table <- reduce(tables[1:6], inner_join, by = keys, suffix = c("", ".doublon"))
+  home_table <- reduce(tables[1:6],
+                       inner_join,
+                       by = keys,
+                       suffix = c("", ".doublon"))
   
   home_table <- home_table %>%
-    select(-ends_with(".doublon")) %>% 
+    select(-ends_with(".doublon")) %>%
     mutate(team = squad_home_id)
   
-  away_table <- reduce(tables[8:13], inner_join, by = keys, suffix = c("", ".doublon"))
+  away_table <- reduce(tables[8:13],
+                       inner_join,
+                       by = keys,
+                       suffix = c("", ".doublon"))
   
   away_table <- away_table %>%
-    select(-ends_with(".doublon"))%>% 
+    select(-ends_with(".doublon")) %>%
     mutate(team = squad_away_id)
   
-  joined_table <- home_table %>% 
-    bind_rows(away_table) %>% 
+  joined_table <- home_table %>%
+    bind_rows(away_table) %>%
     mutate(game = game_id)
   
-  Sys.sleep(sample(5:10, 1))  
+  Sys.sleep(sample(5:10, 1))
   
   return(joined_table)
 }
@@ -90,7 +103,7 @@ get_all_player_data <- function(url) {
 # Define the function to perform database operations
 perform_db_operations <- function() {
   # Define the name of the SQLite database file
-  sqlite_file <- "my_database.db"
+  sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
   
   # Check if the database file exists
   if (!file.exists(sqlite_file)) {
@@ -107,7 +120,8 @@ perform_db_operations <- function() {
   })
   
   # Stop execution if connection failed
-  if (is.null(con)) return(NULL)
+  if (is.null(con))
+    return(NULL)
   
   # Retrieve the IDs to remove
   id_to_remove <- tryCatch({
@@ -136,11 +150,9 @@ perform_db_operations <- function() {
     pull()
   
   # Set up the progress bar
-  progress_bar <- progress_bar$new(
-    format = "  Scraping [:bar] :percent in :elapsed",
-    total = length(input_data),
-    width = 60
-  )
+  progress_bar <- progress_bar$new(format = "  Scraping [:bar] :percent in :elapsed",
+                                   total = length(input_data),
+                                   width = 60)
   
   # Initialize the results data frame
   results <- data.frame()
@@ -165,7 +177,11 @@ perform_db_operations <- function() {
   
   # Append the results to the 'Stats_players' table
   tryCatch({
-    dbWriteTable(con, "Stats_players", results, append = TRUE, row.names = FALSE)
+    dbWriteTable(con,
+                 "Stats_players",
+                 results,
+                 append = TRUE,
+                 row.names = FALSE)
   }, error = function(e) {
     message("Error: Could not write results to 'Stats_players'.")
     message("Details: ", e$message)
