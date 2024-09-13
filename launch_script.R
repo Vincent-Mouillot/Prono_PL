@@ -3,6 +3,8 @@ if (!requireNamespace("rprojroot", quietly = TRUE)) {
 }
 
 library(rprojroot)
+library(googledrive)
+library(gargle)
 
 if (.Platform$OS.type == "windows") {
   service_account_root <- "C:/Users/vmoui/Documents/api_keys/"
