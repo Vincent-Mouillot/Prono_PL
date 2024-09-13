@@ -18,10 +18,11 @@ report_links <- match_report_links %>% html_attr("href")
 calendrier <- page_calend %>% html_element("table") %>% html_table() %>%
   select(Wk, Day, Date, Time, Home, Score, Away, Attendance, Referee) %>%
   filter(!is.na(Wk)) %>%
+  mutate(Score = gsub("\u2013", "-", Score)) %>%
   separate(
     Score,
     into = c("score_home", "score_away"),
-    sep = "–",
+    sep = "-",
     convert = TRUE
   ) %>%
   mutate(
