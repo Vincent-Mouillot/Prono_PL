@@ -15,6 +15,20 @@ match_report_links <- page_calend %>% html_elements(xpath = "//a[contains(., 'Ma
 # Extract the href attribute (link) of each matched link
 report_links <- match_report_links %>% html_attr("href")
 
+home_team_id <- page_calend %>%
+  html_elements("table") %>%
+  html_elements("tr") %>%
+  html_elements("td:nth-child(5) a") %>%
+  html_attr("href") %>%
+  str_sub(12, 19)
+
+away_team_id <- page_calend %>%
+  html_elements("table") %>%
+  html_elements("tr") %>%
+  html_elements("td:nth-child(9) a") %>%
+  html_attr("href") %>%
+  str_sub(12, 19)
+
 calendrier <- page_calend %>% html_element("table") %>% html_table() %>%
   select(Wk, Day, Date, Time, Home, Score, Away, Attendance, Referee) %>%
   filter(!is.na(Wk)) %>%
@@ -39,7 +53,9 @@ calendrier <- page_calend %>% html_element("table") %>% html_table() %>%
         NA_character_
       )
     ),
-    id = str_extract(link, "[[:alnum:]]{8}")
+    id = str_extract(link, "[[:alnum:]]{8}"),
+    Home_id = home_team_id,
+    Away_id = away_team_id
   )
 
 # Define the function to perform the database operations
