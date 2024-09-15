@@ -40,8 +40,8 @@ url <- "https://fbref.com/en/comps/9/Premier-League-Stats"
 page_classement <- read_html(url)
 
 team_id <- page_classement %>%
-  html_node("#results2024-202591_overall") %>%
-  html_nodes('td[data-stat="team"] a') %>%
+  html_element("#results2024-202591_overall") %>%
+  html_elements('td[data-stat="team"] a') %>%
   html_attr("href") %>%
   str_sub(12, 19)
 

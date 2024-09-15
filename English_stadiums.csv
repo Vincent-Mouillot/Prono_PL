@@ -50,7 +50,7 @@ Charlton Athletic F.C.,The Valley,0.035632,51.487489
 Wimbledon F.C.,Plough Lane,-0.189667,51.428472
 Carlisle United F.C.,Brunton Park,-2.91365,54.89556
 Crystal Palace F.C.,Selhurst Park,-0.085555555,51.398333333
-Swindon Town F.C.,"County Ground, Swindon",-1.770556,51.564444
+"Swindon Town F.C.,""County Ground, Swindon"",-1.770556,51.564444"
 Barnsley F.C.,Oakwell,-1.4675,53.552222
 Colchester United F.C.,Colchester Community Stadium,0.897703,51.9234
 Preston North End F.C.,Deepdale,-2.688055555,53.772222222
@@ -95,7 +95,7 @@ Woking F.C.,Kingfield Stadium,-0.558811,51.306333
 Nuneaton Town F.C.,Liberty Way,-1.44253,52.5207
 Tamworth F.C.,The Lamb Ground,-1.688925,52.628403
 Farsley Celtic F.C.,The Citadel,-1.664214,53.809711
-Chorley F.C.,"Victory Park, Chorley",-2.62921,53.6455
+"Chorley F.C.,""Victory Park, Chorley"",-2.62921,53.6455"
 Witton Albion F.C.,Wincham Park,-2.488717,53.270472
 Kendal Town F.C.,Pye Motors Stadium,-2.73652222,54.3204
 Ashton United F.C.,Hurst Cross Stadium,-2.0797045,53.5013006
@@ -170,7 +170,7 @@ Hibernian F.C.,Easter Road,-3.165555555,55.961666666
 Heart of Midlothian F.C.,Tynecastle Park,-3.232444444,55.939055555
 Ross County F.C.,Victoria Park,-4.41891,57.5959
 Portadown F.C.,Shamrock Park,-6.457778,54.413056
-Cowdenbeath F.C.,"Central Park, Cowdenbeath",-3.34709722,56.10873889
+"Cowdenbeath F.C.,""Central Park, Cowdenbeath"",-3.34709722,56.10873889"
 Cowdenbeath F.C.,North End Park,-3.3428,56.1144
 Welling United F.C.,Park View Road,0.116514,51.460317
 Ideal SC,Blakes Estate Stadium,-62.18632222,16.78386389
@@ -197,7 +197,7 @@ Redditch United F.C.,The Valley,0.035632,51.487489
 Derry Celtic F.C.,Celtic Park,-7.333611,54.993333
 Droylsden F.C.,Butcher's Arms Ground,-2.1449,53.481858
 Albion Rovers F.C.,Cliftonhill,-4.01139,55.8603
-Albion Rovers F.C.,"Meadow Park, Coatbridge",-4.0142,55.8518
+"Albion Rovers F.C.,""Meadow Park, Coatbridge"",-4.0142,55.8518"
 Argonauts F.C.,Wembley Stadium,-0.279722222,51.555555555
 Glentoran F.C.,The Oval,-5.891319,54.602964
 Linfield F.C.,Windsor Park,-5.955,54.5825
@@ -234,7 +234,7 @@ Leeds United F.C.,Elland Road,-1.572222222,53.777777777
 Clyde F.C.,Broadwood Stadium,-4.03709,55.9448
 Glenavon F.C.,Mourneview Park,-6.336389,54.453889
 Stranraer F.C.,Stair Park,-5.01248,54.9021
-East Fife F.C.,"Bayview Park, Methil",-3.01315,56.18708
+"East Fife F.C.,""Bayview Park, Methil"",-3.01315,56.18708"
 East Fife F.C.,Bayview Stadium,-2.99902,56.1887
 Dumbarton F.C.,Boghead Park,-4.55129722,55.94784167
 Clyde F.C.,Shawfield Stadium,-4.22888889,55.83833333
@@ -269,7 +269,7 @@ Ards F.C.,Clandeboye Park,-5.68447,54.6516
 King's Park F.C.,Forthbank Park,-3.929,56.114
 Porthmadog F.C.,Y Traeth,-4.1204,52.932
 St. Bernard's F.C.,Royal Gymnasium Ground,-3.1974,55.9602
-Lochgelly United F.C.,"Recreation Park, Lochgelly",-3.3151,56.1277
+"Lochgelly United F.C.,""Recreation Park, Lochgelly"",-3.3151,56.1277"
 Vale of Leven F.C.,Millburn Park,-4.57794,55.9815
 Loughborough F.C.,Athletic Ground (Loughborough),-1.1992,52.7743
 Renton F.C.,Tontine Park,-4.5824,55.9657
@@ -280,7 +280,7 @@ Queen of the South F.C.,Palmerston Park,-3.62494,55.0698
 Newtown A.F.C.,Latham Park,-3.32288,52.5115
 Carmarthen Town A.F.C.,Richmond Park,-4.302218,51.859936
 Oswestry Town F.C.,Park Hall,-3.02631,52.8759
-Wigan Borough F.C.,"Springfield Park, Wigan",-2.65066111,53.55491389
+"Wigan Borough F.C.,""Springfield Park, Wigan"",-2.65066111,53.55491389"
 Stalybridge Celtic F.C.,Bower Fold,-2.043864,53.475314
 Maidstone United F.C.,Gallagher Stadium,0.515833,51.28
 Oxford University A.F.C.,Roger Bannister running track,-1.2431,51.7459
@@ -296,11 +296,11 @@ Sunset FC,T.E. McField Sports Centre,-81.3767,19.2987
 Larne F.C.,Inver Park,-5.82625833,54.84980278
 Eastleigh F.C.,Ten Acres,-1.37176944,50.95229444
 Northern F.C.,Hyde Park,-4.2315,55.8799
-Linthouse F.C.,"Langlands Park, Govan",-4.32130003,55.85630035
-Bathgate F.C.,"Mill Park, Bathgate",-3.6462,55.9043
+"Linthouse F.C.,""Langlands Park, Govan"",-4.32130003,55.85630035"
+"Bathgate F.C.,""Mill Park, Bathgate"",-3.6462,55.9043"
 Royal Montserrat Police Force FC,Blakes Estate Stadium,-62.18632222,16.78386389
 Salisbury City F.C.,Raymond McEnhill Stadium,-1.785758,51.104339
-Johnstone F.C.,"Newfield Park, Johnstone",-4.5171,55.8398
+"Johnstone F.C.,""Newfield Park, Johnstone"",-4.5171,55.8398"
 Chelsea F.C. Reserves and Academy,Stamford Bridge,-0.191111111,51.481666666
 Newcastle Blue Star F.C.,Kingston Park,-1.672222,55.018611
 Dover Athletic F.C.,Crabble Athletic Ground,1.284883,51.137814
@@ -328,13 +328,12 @@ Edinburgh City F.C.,Meadowbank Stadium,-3.15861,55.9569
 Edinburgh City F.C.,Ainslie Park,-3.233217,55.971581
 Tonbridge Angels F.C.,Longmead Stadium,0.2691,51.2115
 Ballymoney United F.C.,Riada Stadium,-6.498333,55.061667
-Crystal Palace F.C.,Crystal Palace Park,-0.0705,51.4203
 Abercorn F.C.,New Ralston Park,-4.4035,55.8457
 Abercorn F.C.,Old Ralston Park,-4.4015,55.8454
 Abercorn F.C.,Underwood Park,-4.4375,55.84930038
 Staines Town F.C.,Wheatsheaf Park,-0.502067,51.419727833
 Leith Athletic F.C.,Meadowbank Stadium,-3.15861,55.9569
-St Albans City F.C.,"Clarence Park, St Albans",-0.324,51.753
+"St Albans City F.C.,""Clarence Park, St Albans"",-0.324,51.753"
 Hinckley United F.C.,De Montfort Park,-1.3404,52.559117
 Thames A.F.C.,West Ham Stadium,0.0347389,51.5144
 St Joseph's F.C.,Victoria Stadium,-5.350342,36.149356
@@ -344,9 +343,9 @@ Brora Rangers F.C.,Dudgeon Park,-3.85764,58.0083
 Thames Ironworks F.C.,Hermit Road,0.0134,51.52323889
 Farnborough F.C.,Rushmoor Stadium,-0.762306,51.310444
 Dorchester Town F.C.,The Avenue Stadium,-2.445556,50.700667
-Bo'ness F.C.,"Newtown Park, Bo'ness",-3.6116,56.0095
+"Bo'ness F.C.,""Newtown Park, Bo'ness"",-3.6116,56.0095"
 Arthurlie F.C.,Dunterlie Park,-4.3838,55.8056
-Monmouth Town F.C.,"Chippenham Park, Monmouth",-2.71532,51.8087
+"Monmouth Town F.C.,""Chippenham Park, Monmouth"",-2.71532,51.8087"
 Cray Wanderers F.C.,Hayes Lane,0.02108333,51.39010278
 Ascot United F.C.,Ascot Racecourse,-0.676944,51.4161
 Royal Ordnance Factories F.C.,Invicta Ground,0.088056,51.4875
@@ -354,7 +353,7 @@ Wakehurst F.C.,Mill Meadow,-6.55643833,54.780155
 Aston Villa Under-21s and Academy,Villa Park,-1.884722222,52.509166666
 Babbacombe F.C.,Plainmoor,-3.523825,50.476408
 Ayr F.C.,Somerset Park,-4.62,55.4696
-Wigan United A.F.C.,"Springfield Park, Wigan",-2.65066111,53.55491389
+"Wigan United A.F.C.,""Springfield Park, Wigan"",-2.65066111,53.55491389"
 Bedminster F.C.,Ashton Gate Stadium,-2.620278,51.44
 Bathgate Thistle F.C.,Creamery Park,-3.6566,55.8992
 Beaumont Athletic F.C.,Mile End Stadium,-0.033422222,51.519011111
@@ -364,7 +363,7 @@ Tooting & Mitcham United F.C.,Imperial Fields,-0.172381,51.393231
 Erith & Belvedere F.C.,Park View Road,0.116514,51.460317
 Dagenham F.C.,Victoria Road,0.159867,51.5478
 Crumlin Star,Solitude,-5.947272,54.619517
-Cove Rangers F.C.,"Allan Park, Aberdeen",-2.0797,57.1027
+"Cove Rangers F.C.,""Allan Park, Aberdeen"",-2.0797,57.1027"
 Fisher F.C.,Champion Hill,-0.084061,51.461231
 Folkestone Invicta F.C.,Cheriton Road,1.15945,51.0866
 Croydon Common F.C.,Croydon Common Athletic Ground,-0.08586111,51.39103889
@@ -375,11 +374,10 @@ Sporting Bengal United F.C.,Mile End Stadium,-0.033422222,51.519011111
 Hastings United F.C.,The Pilot Field,0.587431,50.875894
 Eastbourne Town F.C.,The Saffrons,0.275033,50.766075
 FC Halifax Town,The Shay,-1.859167,53.716111
-Walton & Hersham F.C.,"The Sports Ground, Stompond Lane",-0.414775,51.379036
+"Walton & Hersham F.C.,""The Sports Ground, Stompond Lane"",-0.414775,51.379036"
 Corwen F.C.,War Memorial Athletic Ground,-2.15136,52.4626
 Dalbeattie Star F.C.,Islecroft Stadium,-3.81744444,54.93498889
 Coupar Angus F.C.,Foxhall Park,-3.26037,56.5493
-Bournemouth F.C.,"Victoria Park, Bournemouth",-1.88675,50.747027777
 Darlington 1883,Blackwell Meadows,-1.69271,54.638
 VCD Athletic F.C.,The Oakwood,0.1701948,51.455295
 System 3 FC,Victoria Park,-0.038,51.537
@@ -394,7 +392,7 @@ Clachnacuddin F.C.,Grant Street Park,-4.238,57.4859
 Bootle Athletic F.C.,Hawthorne Road,-2.98422778,53.4444
 Blackburn Rovers F.C. Reserves and Academy,Leigh Sports Village,-2.529,53.491
 Bethnal Green United F.C.,Mile End Stadium,-0.033422222,51.519011111
-Bideford A.F.C.,"The Sports Ground, Bideford",-4.208694444,51.021944444
+"Bideford A.F.C.,""The Sports Ground, Bideford"",-4.208694444,51.021944444"
 Hackney Wick F.C.,The Old Spotted Dog Ground,0.021389,51.542222
 Camdonia Chelsea SC,Victoria Park,-0.038,51.537
 Celtic F.C. Reserve and Youth squads,Cappielow,-4.72681,55.9413
@@ -416,12 +414,12 @@ East Kilbride F.C.,K Park Training Academy,-4.150021,55.748595
 Duchy Hockey Club,Pool Academy,-5.27148,50.2302
 Eastern F.C.,Barrowfield Park,-4.2216,55.8402
 Dundee Our Boys F.C.,West Craigie Park,-2.956,56.4703
-Dykehead F.C.,"Parkside, Shotts",-3.8096,55.8159
-Dumbarton Harp F.C.,"Meadow Park, Dumbarton",-4.5679,55.9486
+"Dykehead F.C.,""Parkside, Shotts"",-3.8096,55.8159"
+"Dumbarton Harp F.C.,""Meadow Park, Dumbarton"",-4.5679,55.9486"
 Arsenal F.C. Reserves,Underhill Stadium,-0.191733,51.646158
 5th Kirkcudbrightshire Rifle Volunteers F.C.,Palmerston Park,-3.62494,55.0698
 Team Bath F.C.,Twerton Park,-2.3951,51.3787
-Runcorn F.C. Halton,"Canal Street Stadium, Runcorn",-2.721683,53.3421
+"Runcorn F.C. Halton,""Canal Street Stadium, Runcorn"",-2.721683,53.3421"
 AFC Dunstable,Creasey Park,-0.5391,51.8928
 Hornchurch F.C.,Hornchurch Stadium,0.238316666,51.556547222
 Stourbridge F.C.,War Memorial Athletic Ground,-2.15136,52.4626
@@ -441,7 +439,7 @@ Clapton F.C.,The Old Spotted Dog Ground,0.021389,51.542222
 Clackmannan F.C.,Chapelhill Park,-3.7489,56.1034
 Hinckley F.C.,De Montfort Park,-1.3404,52.559117
 Highmoor Ibis F.C.,Palmer Park Stadium,-0.936944,51.451944
-Hill of Beath Hawthorn F.C.,"Keir's Park, Hill of Beath",-3.37,56.096388888
+"Hill of Beath Hawthorn F.C.,""Keir's Park, Hill of Beath"",-3.37,56.096388888"
 Harrow Chequers F.C.,The Oval,-0.114980555,51.483719444
 Gretna F.C. 2008,Raydale Park,-3.071919,54.993214
 Grays United F.C.,New Recreation Ground,0.329683,51.476547
@@ -450,7 +448,7 @@ Goytre United F.C.,Glenhafod Park Stadium,-3.74554,51.595
 Greenock Juniors F.C.,Ravenscraig Stadium,-4.813056,55.940278
 Glasgow Mets,St Mungo's Academy,-4.2207,55.8541
 Garden Village A.F.C.,Stafford Common,-4.036,51.659
-Heanor Town F.C.,"Town Ground, Heanor",-1.35627,53.0112
+"Heanor Town F.C.,""Town Ground, Heanor"",-1.35627,53.0112"
 Helensburgh F.C.,Ardencaple Park,-4.7518,56.0126
 Heart of Midlothian F.C. Reserve and Youth squads,Oriam,-3.314,55.91
 Oswestry Cricket Club,Morda Road,-3.05815,52.8506
@@ -486,7 +484,7 @@ Torquay Town F.C.,Plainmoor,-3.523825,50.476408
 Stevenage Athletic F.C.,Broadhall Way,-0.193608,51.889839
 Stevenage Town F.C.,Broadhall Way,-0.193608,51.889839
 Tottenham Hotspur F.C. Reserves and Academy,Brisbane Road,-0.012639,51.560139
-Swindon Town F.C. Reserves and Youth,"County Ground, Swindon",-1.770556,51.564444
+"Swindon Town F.C. Reserves and Youth,""County Ground, Swindon"",-1.770556,51.564444"
 Swansea City A.F.C. Reserves,Parc y Scarlets,-4.129167,51.679167
 Stirling University F.C.,Forthbank Stadium,-3.91176,56.1188
 Strathspey Thistle F.C.,Seafield Park,-3.60092,57.3324
@@ -495,12 +493,12 @@ Tipton Town F.C.,Tipton Sports Academy,-2.05331,52.5453
 Tynecastle F.C.,Meggetland Sports Complex,-3.23437,55.9282
 Woolston Works F.C.,Antelope Ground,-1.399722,50.911944
 Wishaw F.C.,Beltane Park,-3.934597,55.773361
-Huntly F.C.,"Christie Park, Huntly",-2.78306111,57.44907222
+"Huntly F.C.,""Christie Park, Huntly"",-2.78306111,57.44907222"
 Bentley Colliery F.C.,Miners Welfare Ground,-1.35144,53.1194
 Brantwood F.C.,Skegoneill Avenue,-5.927,54.621
 Inverurie Loco Works F.C.,Harlaw Park,-2.38150833,57.29045278
 Keith F.C.,Kynoch Park,-2.94472222,57.54083333
-Rochdale A.F.C.,"Athletic Grounds, Rochdale",-2.135453,53.612211
+"Rochdale A.F.C.,""Athletic Grounds, Rochdale"",-2.135453,53.612211"
 Rothes F.C.,Mackessack Park,-3.204722,57.530833
 Rossvale F.C.,Petershill Park,-4.229803,55.877761
 Scarborough Athletic F.C.,Flamingo Land Stadium,-0.41372222,54.26961111
@@ -529,7 +527,7 @@ Wick Academy F.C.,Harmsworth Park,-3.092778,58.4325
 Lynx F.C.,Victoria Stadium,-5.350342,36.149356
 Europa FC,Victoria Stadium,-5.350342,36.149356
 Widnes F.C.,Halton Stadium,-2.738333,53.365833
-Wigan Town A.F.C.,"Springfield Park, Wigan",-2.65066111,53.55491389
+"Wigan Town A.F.C.,""Springfield Park, Wigan"",-2.65066111,53.55491389"
 Reading F.C. Under-21s and Academy,Madejski Stadium,-0.982777777,51.422222222
 Strathmore F.C.,Carolina Port,-2.934,56.466
 Redding Athletic F.C.,Croft Park,-1.5112,55.1209
@@ -540,7 +538,7 @@ Ballymena F.C.,Ballymena Showgrounds,-6.262867,54.869142
 Europa Point F.C.,Victoria Stadium,-5.350342,36.149356
 Manchester 62 F.C.,Victoria Stadium,-5.350342,36.149356
 AFC Wimbledon Development Squad and Academy,Kingsmeadow,-0.281944444,51.405083333
-Wigan County F.C.,"Springfield Park, Wigan",-2.65066111,53.55491389
+"Wigan County F.C.,""Springfield Park, Wigan"",-2.65066111,53.55491389"
 Edusport Academy F.C.,Galabank,-3.26174,54.9938
 Upper Annandale F.C.,Moffat Academy,-3.4371,55.3292
 Broomhill Sports Club Glasgow F.C.,Recreation Park,-3.77864,56.1166
@@ -579,13 +577,13 @@ Hibernian F.C. Under-20s and Academy,Hibernian Training Centre,-2.9308,55.9209
 Tooting Bec F.C.,Imperial Fields,-0.172381,51.393231
 St. James' Swifts F.C.,Donegal Celtic Park,-6.02365833,54.57369167
 Bridgeton Waverley F.C.,Shawfield Stadium,-4.22888889,55.83833333
-St Albans F.C.,"Clarence Park, St Albans",-0.324,51.753
+"St Albans F.C.,""Clarence Park, St Albans"",-0.324,51.753"
 Arsenal W.F.C. Academy,Meadow Park,-0.272222,51.661944
 Manchester United W.F.C.,Leigh Sports Village,-2.529,53.491
 Carnarvon Ironopolis F.C.,The Oval,-4.2675,53.134722
 Avro F.C.,Whitebank Stadium,-2.121747,53.518542
 Glasgow Gladiators Powerchair FC,Craigholme School,-4.290833333,55.840555555
-Hearts of Beath,"Keir's Park, Hill of Beath",-3.37,56.096388888
+"Hearts of Beath,""Keir's Park, Hill of Beath"",-3.37,56.096388888"
 Macclesfield F.C.,Moss Rose,-2.127222222,53.242777777
 Nithsdale Wanderers F.C.,Crawick Holm,-3.9364,55.374
 Maxwelltown Volunteers F.C.,Palmerston Park,-3.62494,55.0698

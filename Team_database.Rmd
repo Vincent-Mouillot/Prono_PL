@@ -37,7 +37,7 @@ teams <- page %>%
   filter(Comp != "",
          Comp != "Premier League 2") %>% 
   mutate(Other_Names = Squad %>%
-           str_remove("\\b(FC|AFC)\\b")%>%
+           str_remove("\\b(FC|AFC )\\b")%>%
            str_trim(side = "right"))
 ```
 
@@ -47,7 +47,7 @@ df_stadium <- vroom("English_stadiums.csv")
 
 df_stadium <- df_stadium %>% 
   mutate(clubLabel = str_replace_all(clubLabel, "\\.", "") %>%
-           str_remove("\\b(FC|AFC)\\b") %>%  # Adjusted to match the pattern without dots
+           str_remove("\\b(FC|AFC )\\b") %>%  # Adjusted to match the pattern without dots
            str_trim(side = "right")) %>% 
   rename(Other_Names = clubLabel,
          Venue_Name = venueLabel)
