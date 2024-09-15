@@ -19,7 +19,6 @@ df_calendrier <- dbGetQuery(con,
 dbDisconnect(con)
 
 df_dist <- df_calendrier %>% 
-  select(Home_id, Away_id) %>% 
   left_join(df_team %>% 
               select(Id, latitude, longitude),
             by = c("Home_id" = "Id")
@@ -29,5 +28,5 @@ df_dist <- df_calendrier %>%
             by = c("Away_id" = "Id"),
             suffix = c("_home", "_away")) %>% 
   mutate(dist_away = distHaversine(cbind(longitude_home, latitude_home), 
-                              cbind(longitude_away, latitude_away)) / 1000) %>% 
-  select(Home_id, Away_id, dist_away)
+                              cbind(longitude_away, latitude_away)) / 1000)
+#cree fct pour compute disy sur un df avec toutes les secu 
