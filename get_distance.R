@@ -18,15 +18,20 @@ df_calendrier <- dbGetQuery(con,
 
 dbDisconnect(con)
 
-df_dist <- df_calendrier %>% 
-  left_join(df_team %>% 
-              select(Id, latitude, longitude),
-            by = c("Home_id" = "Id")
-            ) %>% 
-  left_join(df_team %>% 
-              select(Id, latitude, longitude),
-            by = c("Away_id" = "Id"),
-            suffix = c("_home", "_away")) %>% 
-  mutate(dist_away = distHaversine(cbind(longitude_home, latitude_home), 
-                              cbind(longitude_away, latitude_away)) / 1000)
-#cree fct pour compute disy sur un df avec toutes les secu 
+compute_distance <- function(df_calendrier, df_team){
+  df_dist <- df_calendrier %>% 
+    left_join(df_team %>% 
+                select(Id, latitude, longitude),
+              by = c("Home_id" = "Id")
+    ) %>% 
+    left_join(df_team %>% 
+                select(Id, latitude, longitude),
+              by = c("Away_id" = "Id"),
+              suffix = c("_home", "_away")) %>% 
+    mutate(dist_away = (distHaversine(cbind(longitude_home, latitude_home), 
+                                     cbind(longitude_away, latitude_away)) / 1000) %>% 
+             round(2)) %>% 
+    select(-c(latitude_home, longitude_home, latitude_away, longitude_away))
+  
+  return(df_dist)
+}
