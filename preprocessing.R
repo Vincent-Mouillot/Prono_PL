@@ -40,4 +40,11 @@ df_long <- df_calendrier %>%
   arrange(Wk, Date)
 
 # Affichage du DataFrame transformé
-df_long
+df <- df_long %>% 
+  filter(!is.na(Score)) %>% 
+  select(Day, Time, Diff_clas, Dist, Score)
+
+encoded_df <- cbind(df[, !names(df) %in% c("Day", "Time")], model.matrix(~ Day + Time - 1, data = df))
+
+# Affichage du résultat
+print(encoded_df)
