@@ -15,7 +15,7 @@ encoded_training_df <- encoded_df %>%
   filter(!is.na(Score))
 
 # Créer un modèle de régression linéaire pour prédire "Score" sur l'ensemble complet
-model <- lm(Score ~ ., data = encoded_training_df)
+model <- lm(Score ~ . - 1, data = encoded_training_df)
 
 # Résumé du modèle
 summary(model)
