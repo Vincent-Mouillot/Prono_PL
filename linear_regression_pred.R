@@ -1,4 +1,3 @@
-# Charger les bibliothèques nécessaires
 library(DBI)
 library(RSQLite)
 library(tidyverse)
@@ -6,7 +5,7 @@ library(rprojroot)
 library(caret)
 
 # Charger vos données et prétraiter (préprocessing)
-source("preprocessing.R")
+source(file.path(root, "Prono_PL", "preprocessing.R"))
 
 # Fixer la graine pour la reproductibilité
 set.seed(42)

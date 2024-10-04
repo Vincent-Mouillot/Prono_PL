@@ -3,8 +3,8 @@ library(RSQLite)
 library(tidyverse)
 library(rprojroot)
 
-source("get_distance.R")
-source("get_diff_class.R")
+source(file.path(root, "Prono_PL", "get_distance.R"))
+source(file.path(root, "Prono_PL", "get_diff_class.R"))
 
 root <- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 

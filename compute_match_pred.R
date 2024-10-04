@@ -1,4 +1,4 @@
-source("linear_regression_pred.R")
+source(file.path(root, "Prono_PL", "linear_regression_pred.R"))
 
 results_list <- list()
 

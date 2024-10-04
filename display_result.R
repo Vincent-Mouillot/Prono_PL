@@ -1,10 +1,9 @@
-# script.R
 library(DBI)
 library(RSQLite)
 library(tidyverse)
 library(rprojroot)
 
-root <- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
+root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
 sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
@@ -15,7 +14,7 @@ df_team <- dbGetQuery(con,
 
 dbDisconnect(con)
 
-source("compute_match_pred.R")
+source(file.path(root, "Prono_PL", "compute_match_pred.R"))
 
 data <- data %>% 
   left_join(df_team,
