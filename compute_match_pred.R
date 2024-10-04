@@ -25,10 +25,6 @@ data <- predictions_df %>%
 home_columns <- data %>% select(ends_with("_h"))
 away_columns <- data %>% select(ends_with("_a"))
 
-# Afficher les colonnes pour vérifier
-print(home_columns)
-print(away_columns)
-
 # Initialiser des vecteurs pour stocker les résultats
 max_values <- numeric(nrow(data))
 max_coords <- matrix(NA, nrow = nrow(data), ncol = 2)
@@ -66,7 +62,5 @@ data <- data %>%
          `H(%)` = lower_sums * 100,
          `D(%)` = diagonal_sums * 100,
          `A(%)` = upper_sums * 100) %>% 
-  select(Wk, Date, Time, H_team = Team, `H(%)`, `D(%)`, `A(%)`, A_team = Opponent, score_pred, `score_pred_%`)
-
-# Afficher le dataframe avec les résultats
-print(data)
+  select(Date, Time, H_team = Team_id, `H(%)`, `D(%)`, `A(%)`, A_team = Opponent_id, score_pred, `score_pred_%`) %>% 
+  mutate_if(is.numeric, ~round(., 2))

@@ -44,6 +44,3 @@ df <- df_long %>%
   select(Day, Time, Diff_clas, Dist, Score)
 
 encoded_df <- cbind(df[, !names(df) %in% c("Day", "Time")], model.matrix(~ Day + Time - 1, data = df))
-
-# Affichage du résultat
-print(encoded_df)

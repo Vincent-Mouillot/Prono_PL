@@ -17,9 +17,6 @@ encoded_training_df <- encoded_df %>%
 # Créer un modèle de régression linéaire pour prédire "Score" sur l'ensemble complet
 model <- lm(Score ~ . - 1, data = encoded_training_df)
 
-# Résumé du modèle
-summary(model)
-
 # Supposons que 'future_matches_df' est le dataframe avec les futurs matchs
 # Assurez-vous que 'future_matches_df' contient les mêmes colonnes que 'encoded_df', à l'exception de 'Score'
 # Exemple : 

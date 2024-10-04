@@ -57,6 +57,17 @@ df_stadium <- df_stadium %>%
 teams <- teams %>% 
   left_join(df_stadium, by="Other_Names")
 ```
+```{r}
+abv <- c("BOU", "ARS", "AVL", "BRE", "BHA", "CHE", "CRY", "EVE", "FUL", "IPS", "LEI", "LIV", "MCI", "MUN", "NEW", "NFO", "SOU", "TOT", "WHU", "WOL")
+
+pl_team <- teams %>% 
+  filter(Comp == 'Premier League') %>% 
+  select(Id) %>% 
+  mutate(Abv = abv)
+
+teams <- teams %>% 
+  left_join(pl_team, by="Id")
+```
 
 
 
