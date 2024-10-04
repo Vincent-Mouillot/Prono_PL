@@ -4,7 +4,8 @@ library(tidyverse)
 library(rprojroot)
 library(caret)
 
-# Charger vos données et prétraiter (préprocessing)
+root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
+
 source(file.path(root, "Prono_PL", "preprocessing.R"))
 
 # Fixer la graine pour la reproductibilité

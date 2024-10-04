@@ -1,3 +1,5 @@
+root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
+
 source(file.path(root, "Prono_PL", "linear_regression_pred.R"))
 
 results_list <- list()
