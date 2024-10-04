@@ -2,10 +2,13 @@ library(caret)
 
 source("preprocessing.R")
 
+encoded_training_df <- encoded_df %>% 
+  filter(!is.na(Score))
+
 set.seed(42)  # Pour la reproductibilité
-trainIndex <- createDataPartition(encoded_df$Score, p = 0.8, list = FALSE)
-trainData <- encoded_df[trainIndex, ]
-testData <- encoded_df[-trainIndex, ]
+trainIndex <- createDataPartition(encoded_training_df$Score, p = 0.8, list = FALSE)
+trainData <- encoded_training_df[trainIndex, ]
+testData <- encoded_training_df[-trainIndex, ]
 
 # Créer un modèle de régression linéaire pour prédire "Score"
 model <- lm(Score ~ ., data = trainData)
