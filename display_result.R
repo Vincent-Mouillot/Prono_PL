@@ -3,6 +3,8 @@ library(RSQLite)
 library(tidyverse)
 library(rprojroot)
 
+source("get_cloud_db.R")
+
 root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
 sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
