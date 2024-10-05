@@ -31,16 +31,18 @@ data <- data %>%
 print_table <- function(df) {
   # Stocker la sortie dans une variable
   output <- ""
-  output <- paste0(output, "----------------------------------------------------\n")
-  output <- paste0(output, "| Home | H(%) | D(%) | A(%) | Away | Score | Sc(%) |\n")
-  output <- paste0(output, "|------|------|------|------|------|-------|-------|\n")
   
   for (i in 1:nrow(df)) {
-    output <- paste0(output, sprintf("| %-4s |  %-3s |  %-3s |  %-3s | %-4s |  %-4s |  %-4s |\n", 
-                                     df$Abv_h[i], df$`H(%)`[i], df$`D(%)`[i], df$`A(%)`[i], df$Abv_a[i], df$score_pred[i], df$`score_pred_%`[i]))
+    output <- paste0(output, sprintf("| %-3s | %-3s | %-3s | %-3s | %-4s | %-3s | %-3s |\n", 
+                                     df$Abv_h[i], 
+                                     paste0(df$`H(%)`[i], "%"), 
+                                     paste0(df$`D(%)`[i], "%"), 
+                                     paste0(df$`A(%)`[i], "%"), 
+                                     df$Abv_a[i], 
+                                     df$score_pred[i], 
+                                     paste0(df$`score_pred_%`[i], "%")))
   }
   
-  output <- paste0(output, "----------------------------------------------------\n")
   return(output)
 }
 
