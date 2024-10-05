@@ -65,4 +65,4 @@ data <- data %>%
          `D(%)` = diagonal_sums * 100,
          `A(%)` = upper_sums * 100) %>% 
   select(Date, Time, H_team = Team_id, `H(%)`, `D(%)`, `A(%)`, A_team = Opponent_id, score_pred, `score_pred_%`) %>% 
-  mutate_if(is.numeric, ~round(., 2))
+  mutate_if(is.numeric, ~round(., 0))
