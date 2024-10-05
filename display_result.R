@@ -50,4 +50,4 @@ output_table <- print_table(data)
 cat(output_table)
 
 # Écrire la sortie dans un fichier texte pour la récupérer dans le script bash
-writeLines(output_table, "table_output.txt")
+writeLines(output_table,  file.path(root, "Prono_PL","table_output.txt"))
