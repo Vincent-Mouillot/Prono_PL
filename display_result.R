@@ -53,3 +53,6 @@ cat(output_table)
 
 # Écrire la sortie dans un fichier texte pour la récupérer dans le script bash
 writeLines(output_table,  file.path(root, "Prono_PL","table_output.txt"))
+
+# Optionnel : Supprimer le fichier temporaire après usage
+file.remove(temp_db_path)

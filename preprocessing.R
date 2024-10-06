@@ -43,6 +43,6 @@ df_long <- df_calendrier %>%
 
 # Affichage du DataFrame transformé
 df <- df_long %>% 
-  select(Day, Time, Diff_clas, Dist, Score)
+  select(Date, Day, Time, Diff_clas, Dist, Score)
 
 encoded_df <- cbind(df[, !names(df) %in% c("Day", "Time")], model.matrix(~ Day + Time - 1, data = df))
