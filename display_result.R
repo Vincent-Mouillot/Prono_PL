@@ -33,7 +33,8 @@ print_table <- function(df) {
   output <- ""
   
   for (i in 1:nrow(df)) {
-    output <- paste0(output, sprintf("| %-3s | %-3s | %-3s | %-3s | %-4s | %-3s | %-3s |\n", 
+    output <- paste0(output, sprintf("| %-8s\t| %-3s\t| %-3s\t| %-3s\t| %-3s\t| %-4s\t| %-3s\t| %-3s\t|\n", 
+                                     df$Date[i] %>% ymd() %>% format("%d-%m-%y"),
                                      df$Abv_h[i], 
                                      paste0(df$`H(%)`[i], "%"), 
                                      paste0(df$`D(%)`[i], "%"), 
