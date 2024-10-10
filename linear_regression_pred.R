@@ -16,7 +16,8 @@ encoded_training_df <- encoded_df %>%
   select(-c(Wk, Date, Day, Time, Team_id, Team, Opponent_id, Opponent, Score_opp))
 
 # Créer un modèle de régression linéaire pour prédire "Score" sur l'ensemble complet
-model <- lm(Score ~ . - 1, data = encoded_training_df)
+#model <- lm(Score ~ ., data = encoded_training_df)
+model <- lm(Score ~ .^2, data = encoded_training_df)
 
 # Both directions (forward and backward stepwise)
 both_model <- step(model, direction = "both")
@@ -36,6 +37,8 @@ future_matches_df <- encoded_df %>%
 
 # Prédire sur les futurs matchs
 future_predictions <- predict(model, newdata = future_matches_df)
+
+future_predictions <- ifelse(future_predictions < 0, 0.1, future_predictions)
 
 # Afficher les prédictions
 predictions_df <- df_long %>% 
