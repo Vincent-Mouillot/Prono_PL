@@ -15,34 +15,49 @@ encoded_training_df <- encoded_df %>%
   filter(!is.na(Score)) %>% 
   select(-c(Wk, Date, Day, Time, Team_id, Team, Opponent_id, Opponent, Score_opp))
 
-# Créer un modèle de régression linéaire pour prédire "Score" sur l'ensemble complet
-#model <- lm(Score ~ ., data = encoded_training_df)
-model <- lm(Score ~ .^2, data = encoded_training_df)
+# model <- lm(Score ~ ., data = encoded_training_df)
+# both_model <- step(model, direction = "both")
+# summary(both_model)
+# final_model <- both_model
 
-# Both directions (forward and backward stepwise)
-both_model <- step(model, direction = "both")
+# poisson_model <- glm(Score ~ ., data = encoded_training_df, family = poisson())
+# step_poisson_model <- MASS::stepAIC(poisson_model, direction = "both", trace = TRUE)
+# final_quasi_poisson_model <- glm(formula(step_poisson_model), data = encoded_training_df, family = quasipoisson())
+# summary(final_quasi_poisson_model)
+# # Vérifier la surdispersion
+# dispersion <- sum(residuals(final_quasi_poisson_model, type = "pearson")^2) / final_quasi_poisson_model$df.residual
+# print(dispersion)
+# final_model <- final_quasi_poisson_model
 
-# Résumé du modèle résultant
-summary(both_model)
+# Assumons que data_vector contient des comptages et une covariable (X)
+# model_poisson <- glm(Score ~ ., data = encoded_training_df, family = poisson(link = "log"))
+# both_model <- step(model_poisson, direction = "both")
+# summary(model_poisson)
+# final_model <- model_poisson
+
+model_nb <- glm.nb(Score ~ ., data = encoded_training_df)
+summary(model_nb)
+both_model <- step(model_nb, direction = "both")
+final_model <- both_model
 
 # Supposons que 'future_matches_df' est le dataframe avec les futurs matchs
 # Assurez-vous que 'future_matches_df' contient les mêmes colonnes que 'encoded_df', à l'exception de 'Score'
 # Exemple : 
 future_matches_df <- encoded_df %>% 
   filter(is.na(Score),
-         ymd(Date) - today() < 14) %>% 
+         ymd(Date) - today() < 10) %>% 
   select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp)) %>% 
   head(40) 
   
 
-# Prédire sur les futurs matchs
-future_predictions <- predict(model, newdata = future_matches_df)
+# Prédire sur les futurs matchsS
+future_predictions <- predict(final_model, newdata = future_matches_df)
 
 future_predictions <- ifelse(future_predictions < 0, 0.1, future_predictions)
 
 # Afficher les prédictions
 predictions_df <- df_long %>% 
   filter(is.na(Score),
-         ymd(Date) - today() < 14) %>% 
+         ymd(Date) - today() < 10) %>% 
   head(40) %>%
   mutate(Score = future_predictions)

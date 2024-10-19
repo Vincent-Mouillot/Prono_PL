@@ -15,13 +15,14 @@ df_calendrier <- dbGetQuery(con,
 dbDisconnect(con)
 
 
-last_results_function <- function(df, side = NA_character_) {
+last_results_function <- function(df, side = NA_character_, nb_match = 3) {
   df_result <- df %>%
-    select(Wk, Home, Away, result) %>%
+    filter(!is.na(result)) %>% 
+    select(Wk, Home = Home_id, Away = Away_id, result) %>%
     pivot_longer(
       cols = c(Home, Away),
       names_to = "Side",
-      values_to = "Team"
+      values_to = "Team_id"
     ) %>%
     mutate(Result_team = case_when(((result == "H") &
                                       (Side == "Home")) | 
@@ -39,22 +40,18 @@ last_results_function <- function(df, side = NA_character_) {
   }
   
   res <- df_result %>%
-    group_by(Team) %>%
-    slice_tail(n = 5) %>%
+    group_by(Team_id) %>%
+    slice_tail(n = nb_match) %>%
     arrange(desc(Wk)) %>%
     mutate(J_label = paste0("J-", row_number())) %>%
-    select(Team, Result_team, J_label) %>%
+    select(Team_id, Result_team, J_label) %>%
     pivot_wider(names_from = J_label, values_from = Result_team) %>%
     rename_with( ~ if (is.na(side) ||
                        side == "") {
       .x
     } else {
       paste0(.x, "_", side)
-    }, -Team)
+    }, -Team_id)
   
   return(res)
 }
-
-df_serie <- last_results_function(df_calendrier)
-df_home_serie <- last_results_function(df_calendrier, "Home")
-df_away_serie <- last_results_function(df_calendrier, "Away")

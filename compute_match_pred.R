@@ -3,6 +3,7 @@ root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 source(file.path(root, "Prono_PL", "linear_regression_pred.R"))
 
 results_list <- list()
+results_matrix_list <- list()
 
 # Calculer les probabilités pour chaque Score dans Wk
 for (i in 1:nrow(predictions_df)) {
@@ -51,6 +52,8 @@ for (i in 1:nrow(data)) {
   upper_sums[i] <- sum(result_matrix[upper.tri(result_matrix)])  # Somme des éléments au-dessus de la diagonale
   lower_sums[i] <- sum(result_matrix[lower.tri(result_matrix)])  # Somme des éléments en-dessous de la diagonale
   diagonal_sums[i] <- sum(diag(result_matrix))  # Somme des éléments de la diagonale
+  
+  results_matrix_list[[i]] <- result_matrix
 }
 
 
