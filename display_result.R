@@ -29,6 +29,9 @@ data <- data %>%
 
 source(file.path(root, "Prono_PL", "store_history.R"))
 
+# Ré-uploader et remplacer l'ancien fichier sur Google Drive
+drive_update(file, media = temp_db_path)
+
 # Fonction pour afficher le tableau dans le format souhaité
 print_table <- function(df) {
   # Stocker la sortie dans une variable
