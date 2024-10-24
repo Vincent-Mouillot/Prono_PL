@@ -20,6 +20,10 @@ encoded_training_df <- encoded_df %>%
 # summary(both_model)
 # final_model <- both_model
 
+library(quantreg)
+final_model <- rq(Score ~ ., data = encoded_training_df, tau = 0.65)
+
+
 # poisson_model <- glm(Score ~ ., data = encoded_training_df, family = poisson())
 # step_poisson_model <- MASS::stepAIC(poisson_model, direction = "both", trace = TRUE)
 # final_quasi_poisson_model <- glm(formula(step_poisson_model), data = encoded_training_df, family = quasipoisson())
@@ -35,10 +39,10 @@ encoded_training_df <- encoded_df %>%
 # summary(model_poisson)
 # final_model <- model_poisson
 
-model_nb <- glm.nb(Score ~ ., data = encoded_training_df)
-summary(model_nb)
-both_model <- step(model_nb, direction = "both")
-final_model <- both_model
+# model_nb <- glm.nb(Score ~ ., data = encoded_training_df)
+# summary(model_nb)
+# both_model <- step(model_nb, direction = "both")
+# final_model <- both_model
 
 # Supposons que 'future_matches_df' est le dataframe avec les futurs matchs
 # Assurez-vous que 'future_matches_df' contient les mêmes colonnes que 'encoded_df', à l'exception de 'Score'
@@ -46,8 +50,8 @@ final_model <- both_model
 future_matches_df <- encoded_df %>% 
   filter(is.na(Score),
          ymd(Date) - today() < 10) %>% 
-  select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp)) %>% 
-  head(40) 
+  filter(Wk == min(Wk)) %>% 
+  select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp)) 
   
 
 # Prédire sur les futurs matchsS
@@ -56,8 +60,8 @@ future_predictions <- predict(final_model, newdata = future_matches_df)
 future_predictions <- ifelse(future_predictions < 0, 0.1, future_predictions)
 
 # Afficher les prédictions
-predictions_df <- df_long %>% 
+predictions_df <- encoded_df %>% 
   filter(is.na(Score),
-         ymd(Date) - today() < 10) %>% 
-  head(40) %>%
+         ymd(Date) - today() < 5) %>% 
+  filter(Wk == min(Wk)) %>% 
   mutate(Score = future_predictions)
