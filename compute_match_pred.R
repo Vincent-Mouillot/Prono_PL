@@ -3,6 +3,7 @@ root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 source(file.path(root, "Prono_PL", "linear_regression_pred.R"))
 
 results_list <- list()
+results_matrix_list <- list()
 
 # Calculer les probabilités pour chaque Score dans Wk
 for (i in 1:nrow(predictions_df)) {
@@ -34,28 +35,27 @@ upper_sums <- numeric(nrow(data))
 lower_sums <- numeric(nrow(data))
 diagonal_sums <- numeric(nrow(data))
 
-# Boucle sur chaque ligne
 for (i in 1:nrow(data)) {
   # Extraire les vecteurs pour la ligne i
   home_vector <- as.numeric(home_columns[i, ])
   away_vector <- as.numeric(away_columns[i, ])
   
-  # Calculer le produit matriciel
-  result_matrix <- t(t(home_vector)) %*% away_vector
+  # Calculer le produit matriciel (produit extérieur)
+  result_matrix <- home_vector %*% t(away_vector)  # Produit extérieur entre les deux vecteurs
   
   # Trouver la valeur maximale et ses coordonnées
-  max_index <- which.max(result_matrix)
-  max_coords[i, ] <- arrayInd(max_index, dim(result_matrix))
-  max_values[i] <- result_matrix[max_coords[i, ]]
+  max_index <- which.max(result_matrix)  # Index de la valeur maximale dans la matrice
+  max_coords[i, ] <- arrayInd(max_index, dim(result_matrix))  # Obtenir les coordonnées (ligne, colonne)
+  max_values[i] <- result_matrix[max_coords[i, 1], max_coords[i, 2]]  # Récupérer la valeur maximale avec les coordonnées
   
   # Calculer les probabilités pour upper, lower et diagonal
-  upper_sums[i] <- sum(result_matrix[upper.tri(result_matrix)])
-  lower_sums[i] <- sum(result_matrix[lower.tri(result_matrix)])
-  diagonal_sums[i] <- sum(diag(result_matrix))
+  upper_sums[i] <- sum(result_matrix[upper.tri(result_matrix)])  # Somme des éléments au-dessus de la diagonale
+  lower_sums[i] <- sum(result_matrix[lower.tri(result_matrix)])  # Somme des éléments en-dessous de la diagonale
+  diagonal_sums[i] <- sum(diag(result_matrix))  # Somme des éléments de la diagonale
   
-  # Stocker le résultat dans la liste
-  results_list[[i]] <- result_matrix
+  results_matrix_list[[i]] <- result_matrix
 }
+
 
 # Ajouter les résultats au dataframe d'origine
 data <- data %>%

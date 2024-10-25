@@ -33,5 +33,9 @@ compute_distance <- function(df_calendrier, df_team){
              round(2)) %>% 
     select(-c(latitude_home, longitude_home, latitude_away, longitude_away))
   
+  max_distance <- max(df_dist$dist_away, na.rm = TRUE)
+  df_dist <- df_dist %>%
+    mutate(dist_away_norm = dist_away / max_distance)
+  
   return(df_dist)
 }
