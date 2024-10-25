@@ -3,6 +3,7 @@ library(RSQLite)
 library(tidyverse)
 library(rprojroot)
 library(caret)
+library(quantreg)
 
 root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
@@ -20,9 +21,10 @@ encoded_training_df <- encoded_df %>%
 # summary(both_model)
 # final_model <- both_model
 
-library(quantreg)
-final_model <- rq(Score ~ ., data = encoded_training_df, tau = 0.65)
-
+model <- rq(Score ~ ., data = encoded_training_df, tau = 0.65)
+both_model <- step(model, direction = "both")
+summary(both_model)
+final_model <- both_model
 
 # poisson_model <- glm(Score ~ ., data = encoded_training_df, family = poisson())
 # step_poisson_model <- MASS::stepAIC(poisson_model, direction = "both", trace = TRUE)

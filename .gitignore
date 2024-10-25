@@ -50,3 +50,6 @@ rsconnect/
 
 # Database 
 *.db
+
+# Output table
+table_output.txt
