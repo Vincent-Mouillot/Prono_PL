@@ -52,8 +52,7 @@ final_model <- both_model
 future_matches_df <- encoded_df %>% 
   filter(is.na(Score),
          ymd(Date) - today() < 3) %>% 
-  filter(Wk == min(Wk)) %>% 
-  select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp)) 
+  select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp))
   
 
 # Prédire sur les futurs matchsS
@@ -65,5 +64,4 @@ future_predictions <- ifelse(future_predictions < 0, 0.1, future_predictions)
 predictions_df <- encoded_df %>% 
   filter(is.na(Score),
          ymd(Date) - today() < 3) %>% 
-  filter(Wk == min(Wk)) %>% 
   mutate(Score = future_predictions)
