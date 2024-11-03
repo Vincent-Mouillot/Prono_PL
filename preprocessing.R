@@ -10,8 +10,7 @@ source(file.path(root, "Prono_PL", "get_diff_class.R"))
 # source(file.path(root, "Prono_PL", "compute_last_results.R"))
 source(file.path(root, "Prono_PL", "compute_nb_points_last_weeks.R"))
 source(file.path(root, "Prono_PL", "compute_avg_gls.R"))
-
-root <- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
+source(file.path(root, "Prono_PL", "compute_kmeans_team.R"))
 
 sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
@@ -75,6 +74,21 @@ df <- df_long %>%
   left_join(df_serie,
             by = c("Team_id", "Wk")) %>% 
   # mutate(across(starts_with("J-"), ~ replace_na(.x, "D")))
-  mutate(across(starts_with("nb_point"), ~ replace_na(.x, 3)))
+  mutate(across(starts_with("nb_point"), ~ replace_na(.x, 3))) %>% 
+  left_join(
+    df_stats_agg %>% 
+      select(team,
+             cluster),
+    by = c("Team_id" = "team")
+  ) %>% 
+  left_join(
+    df_stats_agg %>% 
+      select(team,
+             cluster),
+    by = c("Opponent_id" = "team"),
+    suffix = c("", "_opp")
+  ) %>% 
+  mutate(cluster = as.factor(cluster),
+         cluster_opp = as.factor(cluster_opp))
 
-encoded_df <- df #cbind(df[, !names(df) %in% c("Day", "Time")], model.matrix(~ Day + Time - 1, data = df))
+encoded_df <- df #cbind(df[, !names(df) %in% c("cluster", "cluster_opp")], model.matrix(~ cluster + cluster_opp - 1, data = df))
