@@ -5,7 +5,7 @@ source(file.path(root, "Prono_PL", "linear_regression_pred.R"))
 results_list <- list()
 results_matrix_list <- list()
 
-# Calculer les probabilités pour chaque Score dans Wk
+if(nrow(predictions_df) != 0){
 for (i in 1:nrow(predictions_df)) {
   lambda <- predictions_df$Score[i]
   g_values <- 0:10
@@ -66,3 +66,16 @@ data <- data %>%
          `A(%)` = upper_sums * 100) %>% 
   select(Date, Time, H_team = Team_id, `H(%)`, `D(%)`, `A(%)`, A_team = Opponent_id, score_pred, `score_pred_%`) %>% 
   mutate_if(is.numeric, ~round(., 0))
+}else{
+  data <- tibble(
+    Date = as.Date(character()),
+    Time = character(),
+    H_team = character(),
+    `H(%)` = numeric(),
+    `D(%)` = numeric(),
+    `A(%)` = numeric(),
+    A_team = character(),
+    score_pred = character(),
+    `score_pred_%` = numeric()
+  )
+}

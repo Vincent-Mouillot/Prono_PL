@@ -27,26 +27,31 @@ data <- data %>%
             by=c("A_team" = "Id"),
             suffix = c("_h", "_a"))
 
-source(file.path(root, "Prono_PL", "store_history.R"))
+if(nrow(data) != 0){
+  source(file.path(root, "Prono_PL", "store_history.R")) 
+}
 
 # Ré-uploader et remplacer l'ancien fichier sur Google Drive
 drive_update(file, media = temp_db_path)
 
 # Fonction pour afficher le tableau dans le format souhaité
 print_table <- function(df) {
-  # Stocker la sortie dans une variable
-  output <- ""
-  
-  for (i in 1:nrow(df)) {
-    output <- paste0(output, sprintf("| %-8s | %-3s | %-3s | %-3s | %-3s | %-4s | %-3s | %-3s |\n", 
-                                     df$Date[i] %>% ymd() %>% format("%d-%m-%y"),
-                                     df$Abv_h[i], 
-                                     paste0(df$`H(%)`[i], "%"), 
-                                     paste0(df$`D(%)`[i], "%"), 
-                                     paste0(df$`A(%)`[i], "%"), 
-                                     df$Abv_a[i], 
-                                     df$score_pred[i], 
-                                     paste0(df$`score_pred_%`[i], "%")))
+  if(nrow(df) != 0){
+    output <- ""
+    
+    for (i in 1:nrow(df)) {
+      output <- paste0(output, sprintf("| %-8s | %-3s | %-3s | %-3s | %-3s | %-4s | %-3s | %-3s |\n", 
+                                       df$Date[i] %>% ymd() %>% format("%d-%m-%y"),
+                                       df$Abv_h[i], 
+                                       paste0(df$`H(%)`[i], "%"), 
+                                       paste0(df$`D(%)`[i], "%"), 
+                                       paste0(df$`A(%)`[i], "%"), 
+                                       df$Abv_a[i], 
+                                       df$score_pred[i], 
+                                       paste0(df$`score_pred_%`[i], "%")))
+    }
+  }else{
+    output <- "No match to predict in the next 3 days"
   }
   
   return(output)
