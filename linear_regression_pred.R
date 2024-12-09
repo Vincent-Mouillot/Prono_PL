@@ -49,7 +49,10 @@ future_matches_df <- encoded_df %>%
   select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp))
   
 # Mettre toutes les predictions dans un df pour tous les modèles
-prediction_df <- 
+prediction_df <- data.frame(Score_lin = predict(final_model_lin, newdata = future_matches_df),
+                            Score_rq = predict(final_model_rq, newdata = future_matches_df),
+                            Score_pois = predict(final_model_pois, newdata = future_matches_df),
+                            Score_quasi_pois = predict(final_model_quasi_pois, newdata = future_matches_df))
 
 # Prédire sur les futurs matchsS
 future_predictions <- predict(final_model_rq, newdata = future_matches_df)
