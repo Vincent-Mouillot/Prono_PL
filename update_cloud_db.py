@@ -39,7 +39,7 @@ credentials = Credentials.from_service_account_file(service_account_json)
 drive_service = build("drive", "v3", credentials=credentials)
 
 # Spécifiez le chemin du fichier à télécharger
-temp_db_path = "C:/Users/vmoui/Documents/Prono_PL/my_database.db"
+temp_db_path = os.path.join(project_root, "my_database.db")
 
 # Rechercher le fichier sur Google Drive par son nom
 file_name = "my_database.db"
