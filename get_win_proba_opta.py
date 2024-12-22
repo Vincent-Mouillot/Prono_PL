@@ -8,6 +8,7 @@ import sqlite3
 import time
 from datetime import datetime
 from pathlib import Path
+import platform
 
 # Trouver le répertoire racine contenant "Prono_PL" et créer le chemin vers le fichier SQLite
 root = Path(__file__).resolve().parent  # Partir du répertoire actuel du script
@@ -22,14 +23,20 @@ if (root / 'Prono_PL').exists():
 else:
     print("Répertoire 'Prono_PL' non trouvé")
 
-# Configurer les options pour Chromium (en mode headless)
-options = Options()
-options.headless = True  # Exécuter en mode headless (sans fenêtre)
-options.add_argument('--no-sandbox')  # Parfois nécessaire sur Raspberry Pi
-options.add_argument('--disable-dev-shm-usage')  # Pour éviter les problèmes de mémoire partagée
+system = platform.system()
+if system == "Windows":
+    print("Système détecté : Windows")
+    service = Service(ChromeDriverManager().install())
+elif system == "Linux":
+    print("Système détecté : Linux (Raspberry Pi présumé)")
+    service = Service('/usr/bin/chromedriver')
+else:
+    raise EnvironmentError(f"Système d'exploitation non supporté : {system}")
+
+options = webdriver.ChromeOptions()
 
 # Utilisation de webdriver-manager pour gérer le chromedriver
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(service=service, options=options)
 
 try:
     # Naviguer vers l'URL cible
@@ -91,7 +98,7 @@ try:
             })
         except Exception as e:
             print(f"Erreur lors de l'extraction des données : {e}")
-
+    
     # Créer un DataFrame pandas avec les données collectées
     df = pd.DataFrame(data)
 
