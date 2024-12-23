@@ -38,6 +38,10 @@ options.add_argument("--headless")
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--window-size=1920,1080")
+options.add_argument(
+    "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.90 Safari/537.36"
+)
 
 # Utilisation de webdriver-manager pour gérer le chromedriver
 driver = webdriver.Chrome(service=service, options=options)
@@ -47,7 +51,7 @@ try:
     url = "https://theanalyst.com/eu/competition/premier-league/fixtures"
     driver.get(url)
 
-    time.sleep(5)
+    time.sleep(15)
 
     # Trouver le bouton en utilisant ses classes
     button = driver.find_element(By.CSS_SELECTOR, 
