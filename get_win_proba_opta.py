@@ -9,6 +9,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 import platform
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Trouver le répertoire racine contenant "Prono_PL" et créer le chemin vers le fichier SQLite
 root = Path(__file__).resolve().parent  # Partir du répertoire actuel du script
@@ -51,7 +53,10 @@ try:
     url = "https://theanalyst.com/eu/competition/premier-league/fixtures"
     driver.get(url)
 
-    time.sleep(15)
+    WebDriverWait(driver, 60).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, 
+                                             "button.DatePickerHeader-module_datepicker-header-date__wsJVr.DatePickerHeader-module_datepicker-header-date--clickable__v4vmf"))
+    )
 
     # Trouver le bouton en utilisant ses classes
     button = driver.find_element(By.CSS_SELECTOR, 
@@ -66,6 +71,9 @@ try:
     # Reformatter en "YYYY-MM-DD"
     formatted_date = date_object.strftime("%Y-%m-%d")
 
+    WebDriverWait(driver, 60).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a.FixtureTile-module_fixture-tile-link__GmKtI"))
+    )
     # Trouver les éléments des liens des matchs
     elements = driver.find_elements(By.CSS_SELECTOR, "a.FixtureTile-module_fixture-tile-link__GmKtI")
     data = []
@@ -73,10 +81,17 @@ try:
     # Parcourir les éléments pour extraire les informations
     for element in elements:
         try:
-            # Récupérer les noms des équipes
-            teams = element.find_elements(By.CSS_SELECTOR, "div.FixtureTile-module_fixture-tile-team__IOR4n")
-            home_team = teams[0].text.strip()
-            away_team = teams[1].text.strip()
+            WebDriverWait(element, 60).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.FixtureTile-module_fixture-tile-team__IOR4n"))
+            )
+            # Récupérer les équipes
+            team_elements = element.find_elements(By.CSS_SELECTOR, "div.FixtureTile-module_fixture-tile-team__IOR4n")
+            if len(team_elements) >= 2:
+                home_team = team_elements[0].text.strip()
+                away_team = team_elements[1].text.strip()
+            else:
+                home_team = "Unknown"
+                away_team = "Unknown"
 
             # Récupérer les probabilités si elles existent
             probabilities = element.find_elements(By.CSS_SELECTOR, "div.FixtureTile-module_probabilities-bar__8LfcA") 
@@ -109,7 +124,7 @@ try:
     
     # Créer un DataFrame pandas avec les données collectées
     df = pd.DataFrame(data)
-
+    print(df)
     conn = sqlite3.connect(sqlite_file)
 
     try:
