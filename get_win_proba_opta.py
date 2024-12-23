@@ -33,7 +33,11 @@ elif system == "Linux":
 else:
     raise EnvironmentError(f"Système d'exploitation non supporté : {system}")
 
-options = webdriver.ChromeOptions()
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--disable-gpu")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
 
 # Utilisation de webdriver-manager pour gérer le chromedriver
 driver = webdriver.Chrome(service=service, options=options)
