@@ -118,7 +118,7 @@ try:
     
     # Créer un DataFrame pandas avec les données collectées
     df = pd.DataFrame(data)
-    print(df)
+    
     conn = sqlite3.connect(sqlite_file)
 
     try:
