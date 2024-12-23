@@ -1,15 +1,46 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import sqlite3
 import time
 from datetime import datetime
+from pathlib import Path
+import platform
 
-# Configurer le driver Chrome
-service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service)
+# Trouver le répertoire racine contenant "Prono_PL" et créer le chemin vers le fichier SQLite
+root = Path(__file__).resolve().parent  # Partir du répertoire actuel du script
+
+# Remonter dans les répertoires jusqu'à ce que l'on trouve "Prono_PL"
+while not (root / 'Prono_PL').exists() and root != root.parent:
+    root = root.parent
+
+# Vérification et création du chemin du fichier SQLite
+if (root / 'Prono_PL').exists():
+    sqlite_file = root / 'Prono_PL' / 'my_database.db'
+else:
+    print("Répertoire 'Prono_PL' non trouvé")
+
+system = platform.system()
+if system == "Windows":
+    print("Système détecté : Windows")
+    service = Service(ChromeDriverManager().install())
+elif system == "Linux":
+    print("Système détecté : Linux (Raspberry Pi présumé)")
+    service = Service('/usr/bin/chromedriver')
+else:
+    raise EnvironmentError(f"Système d'exploitation non supporté : {system}")
+
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--disable-gpu")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+
+# Utilisation de webdriver-manager pour gérer le chromedriver
+driver = webdriver.Chrome(service=service, options=options)
 
 try:
     # Naviguer vers l'URL cible
@@ -33,7 +64,6 @@ try:
 
     # Trouver les éléments des liens des matchs
     elements = driver.find_elements(By.CSS_SELECTOR, "a.FixtureTile-module_fixture-tile-link__GmKtI")
-    # Initialiser une liste pour stocker les données
     data = []
 
     # Parcourir les éléments pour extraire les informations
@@ -76,9 +106,7 @@ try:
     # Créer un DataFrame pandas avec les données collectées
     df = pd.DataFrame(data)
 
-    # Connexion à la base de données SQLite
-    db_path = "my_database.db"  # Nom du fichier de la base de données
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(sqlite_file)
 
     try:
         # Charger les IDs des équipes depuis la table Table_teams
