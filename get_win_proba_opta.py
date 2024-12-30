@@ -141,7 +141,37 @@ try:
         conn.execute(create_table_query)
 
         # Insérer les données dans la table
-        df.to_sql("Opta", conn, if_exists="append", index=False)
+        # Charger les données existantes pour détecter les conflits
+        existing_data_query = """
+            SELECT Date, H_team, A_team
+            FROM Opta
+        """
+        existing_data = pd.read_sql_query(existing_data_query, conn)
+
+        # Identifier les nouvelles lignes à insérer
+        merged_df = df.merge(existing_data, on=["Date", "H_team", "A_team"], how="left", indicator=True)
+
+        # Nouvelles lignes à insérer
+        to_insert = merged_df[merged_df["_merge"] == "left_only"].drop(columns=["_merge"])
+
+        # Lignes existantes à mettre à jour
+        to_update = merged_df[merged_df["_merge"] == "both"].drop(columns=["_merge"])
+
+        # Insérer les nouvelles lignes
+        if not to_insert.empty:
+            to_insert.to_sql("Opta", conn, if_exists="append", index=False)
+
+        # Mettre à jour les lignes existantes
+        if not to_update.empty:
+            for _, row in to_update.iterrows():
+                update_query = """
+                    UPDATE Opta
+                    SET H_percent = ?, D_percent = ?, A_percent = ?
+                    WHERE Date = ? AND H_team = ? AND A_team = ?
+                """
+                conn.execute(update_query, (row["H_percent"], row["D_percent"], row["A_percent"], row["Date"], row["H_team"], row["A_team"]))
+
+        conn.commit()
 
         print("Les données ont été insérées avec succès.")
     finally:
