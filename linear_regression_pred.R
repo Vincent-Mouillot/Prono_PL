@@ -1,6 +1,5 @@
 library(DBI)
 library(RSQLite)
-library(MASS)
 library(tidyverse)
 library(rprojroot)
 library(caret)
@@ -19,19 +18,19 @@ encoded_training_df <- encoded_df %>%
 
 # Linear model
 model_lin <- lm(Score ~ ., data = encoded_training_df)
-step_model_lin <- stepAIC(model_lin, direction = "both")
+step_model_lin <- MASS::stepAIC(model_lin, direction = "both")
 summary(step_model_lin)
 final_model_lin <- step_model_lin
 
 # Quantile regression
 model_rq <- rq(Score ~ ., data = encoded_training_df, tau = 0.65)
-step_model_rq <- stepAIC(model_rq, direction = "both")
+step_model_rq <- MASS::stepAIC(model_rq, direction = "both")
 summary(step_model_rq)
 final_model_rq <- step_model_rq
 
 # Poisson model
 model_poisson <- glm(Score ~ ., data = encoded_training_df, family = poisson(link = "log"))
-step_model_pois <- stepAIC(model_poisson, direction = "both")
+step_model_pois <- MASS::stepAIC(model_poisson, direction = "both")
 summary(step_model_pois)
 final_model_pois <- step_model_pois
 
