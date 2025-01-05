@@ -11,6 +11,7 @@ source(file.path(root, "Prono_PL", "get_diff_class.R"))
 source(file.path(root, "Prono_PL", "compute_nb_points_last_weeks.R"))
 source(file.path(root, "Prono_PL", "compute_avg_gls.R"))
 source(file.path(root, "Prono_PL", "compute_kmeans_team.R"))
+source(file.path(root, "Prono_PL", "get_pwp.R"))
 
 sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
@@ -35,23 +36,7 @@ df_calendrier <- compute_diff_class(df_calendrier, df_classement)
 df_serie <- get_nb_points_all_weeks(df_calendrier, nb_match = 3)
 df_home_serie <- get_nb_points_all_weeks(df_calendrier, "Home", nb_match = 3)
 df_away_serie <- get_nb_points_all_weeks(df_calendrier, "Away", nb_match = 3)
-
-
-# df_long <- df_calendrier %>% 
-#   # Première transformation pour les équipes à domicile
-#   select(Wk, Date, Day, Time, Team_id = Home_id, Team = Home, Opponent_id = Away_id, Opponent = Away, Diff_clas = diff_class_h, Score = score_home, Score_opp = score_away) %>%
-#   mutate(Dist = 0) %>%
-#   select(Wk, Date, Day, Time, Team_id, Team, Opponent_id, Opponent, Diff_clas, Dist, Score, Score_opp) %>% 
-#   left_join(df_home_serie, by = c("Team_id", "Wk")) %>% 
-#   rename_with(~ gsub("_Home", "_Side", .x), starts_with("J-")) %>%  # Renommer J-1_Home en J-1_Side
-#   bind_rows(
-#     # Deuxième transformation pour les équipes à l'extérieur
-#     df_calendrier %>%
-#       select(Wk, Date, Day, Time, Team_id = Away_id, Team = Away, Opponent_id = Home_id, Opponent = Home, Diff_clas = diff_class_a, Dist = dist_away_norm, Score = score_away, Score_opp = score_home) %>% 
-#       left_join(df_away_serie, by = c("Team_id", "Wk")) %>% 
-#       rename_with(~ gsub("_Away", "_Side", .x), starts_with("J-"))  # Renommer J-1_Away en J-1_Side
-#   ) %>%
-#   arrange(Wk, Date)
+df_pwp <- compute_pwp(df_calendrier, df_xpg_team)
 
 df_long <- df_calendrier %>% 
   left_join(df_home_serie, by = c("Home_id" = "Team_id", "Wk")) %>% 
@@ -73,7 +58,6 @@ df <- df_long %>%
   calculate_previous_week_avg("Score_opp", "Opponent_id") %>% 
   left_join(df_serie,
             by = c("Team_id", "Wk")) %>% 
-  # mutate(across(starts_with("J-"), ~ replace_na(.x, "D")))
   mutate(across(starts_with("nb_point"), ~ replace_na(.x, 3))) %>% 
   left_join(
     df_stats_agg %>% 
@@ -88,7 +72,12 @@ df <- df_long %>%
     by = c("Opponent_id" = "team"),
     suffix = c("", "_opp")
   ) %>% 
+  left_join(df_pwp,
+            by = c("Team_id" = "team", "Wk")) %>%
+  left_join(df_pwp,
+            by = c("Opponent_id" = "team", "Wk"),
+            suffix = c("", "_opp")) %>%
   mutate(cluster = as.factor(cluster),
          cluster_opp = as.factor(cluster_opp))
 
-encoded_df <- df #cbind(df[, !names(df) %in% c("cluster", "cluster_opp")], model.matrix(~ cluster + cluster_opp - 1, data = df))
+encoded_df <- df

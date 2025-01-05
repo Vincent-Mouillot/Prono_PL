@@ -2,6 +2,7 @@ library(DBI)
 library(RSQLite)
 library(tidyverse)
 library(rprojroot)
+library(zoo)
 
 root <- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
@@ -9,7 +10,7 @@ sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
 con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
 
-df_stat <- dbGetQuery(
+df_xpg_team <- dbGetQuery(
   con,
   "SELECT team,
           game,
@@ -18,20 +19,16 @@ df_stat <- dbGetQuery(
   GROUP BY team, game;"
 )
 
-df_calendrier <- dbGetQuery(
-  con,
-  "SELECT Wk,
-          id,
-          Home_id,
-          Away_id
-  FROM Calendrier
-  WHERE result IS NOT NULL;"
-)
 
 dbDisconnect(con)
 
 compute_pwp <- function(calendrier, stats, side = NA_character_) {
   df <- calendrier %>%
+    filter(!is.na(result)) %>% 
+    select(Wk,
+           id,
+           Home_id,
+           Away_id) %>% 
     left_join(stats, 
               by = c(
                 "id" = "game", 
@@ -95,15 +92,19 @@ compute_pwp <- function(calendrier, stats, side = NA_character_) {
   
   # Add a row for the first matchday with pwp = 0.5
   unique_teams <- unique(df_pwp$team)
-  new_rows <- data.frame(
-    Wk = 1,
-    team = unique_teams,
-    pwp = 0.5
-  )
+  all_wk <- c(1, unique(df_pwp$Wk))
+  df <- expand.grid(team = unique_teams, Wk = all_wk)
   
-  df <- bind_rows(new_rows, df_pwp) %>%
-    arrange(team, Wk)
-  
+  df <- df %>% 
+    left_join(df_pwp,
+              by = c("team", "Wk")) %>%
+    arrange(team, Wk) %>% 
+    group_by(team) %>% 
+    mutate(pwp = if_else(Wk == 1,
+                         0.5,
+                         pwp),
+           pwp = na.locf(pwp))
+  test <<- df
   pwp_suffix <- case_when(
     !is.na(side) & side == "Home_id" ~ "_h",
     !is.na(side) & side == "Away_id" ~ "_a",
@@ -111,7 +112,8 @@ compute_pwp <- function(calendrier, stats, side = NA_character_) {
   )
   
   df <- df %>%
-    rename_with(~ paste0("pwp", pwp_suffix), .cols = "pwp")
+    rename_with(~ paste0("pwp", pwp_suffix), .cols = "pwp") %>% 
+    mutate(Wk = as.integer(Wk))
   
   return(df)
 }
