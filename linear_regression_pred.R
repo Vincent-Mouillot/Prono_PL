@@ -1,5 +1,6 @@
 library(DBI)
 library(RSQLite)
+library(MASS)
 library(tidyverse)
 library(rprojroot)
 library(caret)
@@ -16,35 +17,27 @@ encoded_training_df <- encoded_df %>%
   filter(!is.na(Score)) %>% 
   select(-c(Wk, Date, Day, Time, Team_id, Team, Opponent_id, Opponent, Score_opp))
 
-# model <- lm(Score ~ ., data = encoded_training_df)
-# both_model <- step(model, direction = "both")
-# summary(both_model)
-# final_model <- both_model
+# Linear model
+model_lin <- lm(Score ~ ., data = encoded_training_df)
+step_model_lin <- stepAIC(model_lin, direction = "both")
+summary(step_model_lin)
+final_model_lin <- step_model_lin
 
-model <- rq(Score ~ ., data = encoded_training_df, tau = 0.65)
-both_model <- step(model, direction = "both")
-summary(both_model)
-final_model <- both_model
+# Quantile regression
+model_rq <- rq(Score ~ ., data = encoded_training_df, tau = 0.65)
+step_model_rq <- stepAIC(model_rq, direction = "both")
+summary(step_model_rq)
+final_model_rq <- step_model_rq
 
-# poisson_model <- glm(Score ~ ., data = encoded_training_df, family = poisson())
-# step_poisson_model <- MASS::stepAIC(poisson_model, direction = "both", trace = TRUE)
-# final_quasi_poisson_model <- glm(formula(step_poisson_model), data = encoded_training_df, family = quasipoisson())
-# summary(final_quasi_poisson_model)
-# # Vérifier la surdispersion
-# dispersion <- sum(residuals(final_quasi_poisson_model, type = "pearson")^2) / final_quasi_poisson_model$df.residual
-# print(dispersion)
-# final_model <- final_quasi_poisson_model
+# Poisson model
+model_poisson <- glm(Score ~ ., data = encoded_training_df, family = poisson(link = "log"))
+step_model_pois <- stepAIC(model_poisson, direction = "both")
+summary(step_model_pois)
+final_model_pois <- step_model_pois
 
-# Assumons que data_vector contient des comptages et une covariable (X)
-# model_poisson <- glm(Score ~ ., data = encoded_training_df, family = poisson(link = "log"))
-# both_model <- step(model_poisson, direction = "both")
-# summary(model_poisson)
-# final_model <- model_poisson
-
-# model_nb <- glm.nb(Score ~ ., data = encoded_training_df)
-# summary(model_nb)
-# both_model <- step(model_nb, direction = "both")
-# final_model <- both_model
+# Quasi Poisson
+final_model_quasi_pois <- glm(formula(step_model_pois), data = encoded_training_df, family = quasipoisson())
+summary(final_model_quasi_pois)
 
 # Supposons que 'future_matches_df' est le dataframe avec les futurs matchs
 # Assurez-vous que 'future_matches_df' contient les mêmes colonnes que 'encoded_df', à l'exception de 'Score'
@@ -54,9 +47,14 @@ future_matches_df <- encoded_df %>%
          ymd(Date) - today() == 0) %>% 
   select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp))
   
+# Mettre toutes les predictions dans un df pour tous les modèles
+prediction_df <- data.frame(Score_lin = predict(final_model_lin, newdata = future_matches_df),
+                            Score_rq = predict(final_model_rq, newdata = future_matches_df),
+                            Score_pois = predict(final_model_pois, newdata = future_matches_df),
+                            Score_quasi_pois = predict(final_model_quasi_pois, newdata = future_matches_df))
 
 # Prédire sur les futurs matchsS
-future_predictions <- predict(final_model, newdata = future_matches_df)
+future_predictions <- predict(final_model_rq, newdata = future_matches_df)
 
 future_predictions <- ifelse(future_predictions < 0, 0.1, future_predictions)
 
