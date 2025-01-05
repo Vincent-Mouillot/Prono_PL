@@ -44,7 +44,19 @@ calendrier <- page_calend %>% html_element("table") %>% html_table() %>%
       score_home > score_away ~ "H",
       score_home < score_away ~ "A",
       score_home == score_away ~ "D"
-    ),
+    )
+  )
+
+# Get the row number where the game is not played
+lignes_na <- which(is.na(calendrier$result))
+
+# Add links NA for these games
+for (ligne in rev(lignes_na)) {
+  report_links <- append(report_links, NA, after = ligne - 1)
+}
+
+calendrier <- calendrier %>% 
+  mutate(
     link = paste0(
       "https://fbref.com/",
       if_else(

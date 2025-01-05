@@ -7,8 +7,6 @@ root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
 source(file.path(root, "Prono_PL", "get_cloud_db.R"))
 
-root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
-
 sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
 con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
@@ -37,11 +35,11 @@ drive_update(file, media = temp_db_path)
 # Fonction pour afficher le tableau dans le format souhaité
 print_table <- function(df) {
   if(nrow(df) != 0){
-    output <- ""
+    output <- paste0(data$Date %>% unique(), "\n")
     
     for (i in 1:nrow(df)) {
-      output <- paste0(output, sprintf("| %-8s | %-3s | %-3s | %-3s | %-3s | %-4s | %-3s | %-3s |\n", 
-                                       df$Date[i] %>% ymd() %>% format("%d-%m-%y"),
+      output <- paste0(output, sprintf("| %-4s | %-3s | %-3s | %-3s | %-3s | %-3s | %-3s | %-3s |\n", 
+                                       df$Time[i],
                                        df$Abv_h[i], 
                                        paste0(df$`H(%)`[i], "%"), 
                                        paste0(df$`D(%)`[i], "%"), 
@@ -51,7 +49,7 @@ print_table <- function(df) {
                                        paste0(df$`score_pred_%`[i], "%")))
     }
   }else{
-    output <- "No match to predict in the next 3 days"
+    output <- "No match to predict today"
   }
   
   return(output)

@@ -44,8 +44,7 @@ summary(final_model_quasi_pois)
 # Exemple : 
 future_matches_df <- encoded_df %>% 
   filter(is.na(Score),
-         ymd(Date) - today() < 3,
-         ymd(Date) - today() >= 0) %>% 
+         ymd(Date) - today() == 0) %>% 
   select(-c(Wk, Date, Team_id, Team, Opponent_id, Opponent, Score_opp))
   
 # Mettre toutes les predictions dans un df pour tous les modèles
@@ -62,6 +61,5 @@ future_predictions <- ifelse(future_predictions < 0, 0.1, future_predictions)
 # Afficher les prédictions
 predictions_df <- encoded_df %>% 
   filter(is.na(Score),
-         ymd(Date) - today() < 3,
-         ymd(Date) - today() >= 0) %>% 
+         ymd(Date) - today() == 0) %>% 
   mutate(Score = future_predictions)
