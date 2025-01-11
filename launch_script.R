@@ -15,6 +15,8 @@ source(file.path(root, "Prono_PL", "get_all_data.R"))
 
 source(file.path(root, "Prono_PL", "get_classement.R"))
 
+source(file.path(root, "Prono_PL", "get_proba_book.R"))
+
 # Ré-uploader et remplacer l'ancien fichier sur Google Drive
 drive_update(file, media = temp_db_path)
 
