@@ -1,4 +1,5 @@
 library(shiny)
+library(tidyverse)
 library(DT)
 library(DBI)
 library(RSQLite)
@@ -17,6 +18,7 @@ df_prono <- dbGetQuery(
   con,
   "SELECT
       h.Date,
+      c.Time,
       t1.Other_Names AS Home_Team_Name,
       t2.Other_Names AS Away_Team_Name,
       h.H_percent,
@@ -55,19 +57,21 @@ function(input, output, session) {
   })
   
   output$next_game_table <- renderDataTable({
-    datatable(
-      df_prono %>% 
-        filter(is.na(result),
-               ymd(Date) - today() == 0) %>% 
-        arrange(desc(Date)),
-      options = list(
-        pageLength = 10,
-        dom = '',
-        autoWidth = TRUE
-      ),
-      rownames = FALSE,
-      class = "stripe hover"
-    )
+    
+    # Filtrer et préparer les données
+    df_prono %>%
+      filter(is.na(result), ymd(Date) - today() == 0) %>%
+      arrange(Time) %>%
+      select(-c(score_home, score_away, result)) %>% 
+      datatable(
+        options = list(
+          pageLength = 10,
+          dom = '',
+          autoWidth = TRUE
+        ),
+        rownames = FALSE,
+        class = "stripe hover"
+      ) 
   })
   
 }
