@@ -4,6 +4,8 @@ library(DT)
 library(DBI)
 library(RSQLite)
 library(rprojroot)
+library(ggplot2)
+library(plotly)
 
 root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
@@ -56,22 +58,46 @@ function(input, output, session) {
     )
   })
   
-  output$next_game_table <- renderDataTable({
+  output$next_game_graph <- renderPlotly({
     
-    # Filtrer et préparer les données
-    df_prono %>%
-      filter(is.na(result), ymd(Date) - today() == 0) %>%
-      arrange(Time) %>%
-      select(-c(score_home, score_away, result)) %>% 
-      datatable(
-        options = list(
-          pageLength = 10,
-          dom = '',
-          autoWidth = TRUE
-        ),
-        rownames = FALSE,
-        class = "stripe hover"
-      ) 
+    # Filtrage et tri des données par Time
+    df_prono <- df_prono %>% 
+      filter(is.na(result),
+             ymd(Date) - today() == 0) %>%
+      arrange(Time)
+    
+    # Création d'une colonne "Matchup" pour inclure les deux équipes
+    df_prono$Matchup <- paste(df_prono$Home_Team_Name, "vs", df_prono$Away_Team_Name)
+    
+    # Ordonnancement explicite de la colonne Matchup selon Time
+    df_prono$Matchup <- factor(df_prono$Matchup, levels = df_prono$Matchup)
+    
+    # Transformation des données au format long
+    df_long <- df_prono %>% 
+      pivot_longer(cols = c(H_percent, D_percent, A_percent), 
+                   names_to = "Outcome", 
+                   values_to = "Percentage")
+    
+    # Création du graphique interactif avec Plotly
+    plot_ly(
+      data = df_long,
+      x = ~Percentage,
+      y = ~Matchup,
+      color = ~Outcome,
+      colors = c("H_percent" = "blue", "D_percent" = "gray", "A_percent" = "red"),
+      type = 'bar',
+      orientation = 'h'
+    ) %>%
+      layout(
+        barmode = 'stack',
+        title = "Pourcentages cumulés par match",
+        xaxis = list(title = "Pourcentage"),
+        yaxis = list(title = ""),
+        legend = list(title = list(text = "Résultat"), orientation = "h", x = 0.3, y = -0.1),
+        margin = list(l = 100, r = 20, t = 40, b = 40)
+      )
   })
+  
+  
   
 }

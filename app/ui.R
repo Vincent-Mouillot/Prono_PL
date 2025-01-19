@@ -1,5 +1,6 @@
 library(shiny)
 library(shinydashboard)
+
 dashboardPage(
   dashboardHeader(title = "Pronos PL"),
   dashboardSidebar(
@@ -18,7 +19,7 @@ dashboardPage(
     tabItems(
       tabItem(tabName = "home", h2("Bienvenue dans l'application!")),
       tabItem(tabName = "next_game",
-              dataTableOutput("next_game_table")),
+              plotlyOutput("next_game_graph")),
       tabItem(tabName = "perf_model", h2("Brier Score!")),
       tabItem(tabName = "history", h2("Table of last prono"),
               dataTableOutput("history_table"))
