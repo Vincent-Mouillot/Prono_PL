@@ -1,5 +1,6 @@
 library(shiny)
 library(shinydashboard)
+library(plotly)
 
 dashboardPage(
   dashboardHeader(title = "Pronos PL"),
