@@ -40,7 +40,6 @@ df_prono <- dbGetQuery(
 
 dbDisconnect(con)
 
-# Define server logic required to draw a histogram
 function(input, output, session) {
 
   output$history_table <- renderDataTable({
@@ -60,42 +59,81 @@ function(input, output, session) {
   
   output$next_game_graph <- renderPlotly({
     
-    # Filtrage et tri des données par Time
     df_prono <- df_prono %>% 
       filter(is.na(result),
-             ymd(Date) - today() == 0) %>%
+             ymd(Date) - today() >= 0) %>%
       arrange(Time)
     
-    # Création d'une colonne "Matchup" pour inclure les deux équipes
     df_prono$Matchup <- paste(df_prono$Home_Team_Name, "vs", df_prono$Away_Team_Name)
     
-    # Ordonnancement explicite de la colonne Matchup selon Time
     df_prono$Matchup <- factor(df_prono$Matchup, levels = df_prono$Matchup)
     
-    # Transformation des données au format long
     df_long <- df_prono %>% 
       pivot_longer(cols = c(H_percent, D_percent, A_percent), 
                    names_to = "Outcome", 
-                   values_to = "Percentage")
-    
-    # Création du graphique interactif avec Plotly
-    plot_ly(
-      data = df_long,
-      x = ~Percentage,
-      y = ~Matchup,
-      color = ~Outcome,
-      colors = c("H_percent" = "blue", "D_percent" = "gray", "A_percent" = "red"),
-      type = 'bar',
-      orientation = 'h'
-    ) %>%
-      layout(
-        barmode = 'stack',
-        title = "Pourcentages cumulés par match",
-        xaxis = list(title = "Pourcentage"),
-        yaxis = list(title = ""),
-        legend = list(title = list(text = "Résultat"), orientation = "h", x = 0.3, y = -0.1),
-        margin = list(l = 100, r = 20, t = 40, b = 40)
+                   values_to = "Percentage") %>%
+      mutate(
+        Outcome = factor(Outcome, levels = c("H_percent", "D_percent", "A_percent"))
       )
+    
+    matchups <- unique(df_long$Matchup)
+    n_matches <- length(matchups)
+    
+    plots <- lapply(matchups, function(match) {
+      plot_ly(
+        data = df_long %>% filter(Matchup == match),
+        x = ~Percentage,
+        y = ~"",
+        color = ~Outcome,
+        colors = c("H_percent" = "blue", "D_percent" = "gray", "A_percent" = "red"),
+        type = 'bar',
+        orientation = 'h'
+      ) %>%
+        layout(
+          xaxis = list(
+            title = "",
+            showgrid = FALSE,
+            zeroline = FALSE,
+            showticklabels = FALSE
+          ),
+          yaxis = list(
+            title = "",
+            showgrid = FALSE,
+            zeroline = FALSE,
+            showticklabels = FALSE
+          ),
+          barmode = 'stack',
+          showlegend = FALSE
+        )
+    })
+    
+    fig <- subplot(plots, nrows = n_matches, shareX = TRUE, titleX = TRUE, titleY = FALSE) %>%
+      layout(
+        title = "",
+        legend = list(title = list(text = "Résultat"), orientation = "h", x = 0.3, y = -0.1),
+        margin = list(t = 50)
+      )
+    
+    annotations <- lapply(seq_along(matchups), function(i) {
+      list(
+        x = 0.5,
+        y = 1 - ((i - 1) / n_matches),
+        text = matchups[i],
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE,
+        font = list(
+          size = 16,
+          color = "black"
+        )
+      )
+    })
+    
+    fig <- fig %>% layout(annotations = annotations)
+    
+    fig
   })
   
   
