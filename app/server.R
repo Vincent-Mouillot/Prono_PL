@@ -22,7 +22,9 @@ df_prono <- dbGetQuery(
       h.Date,
       c.Time,
       t1.Other_Names AS Home_Team_Name,
+      t1.Color AS Home_color,
       t2.Other_Names AS Away_Team_Name,
+      t2.Color AS Away_color,
       h.H_percent,
       h.D_percent,
       h.A_percent,
@@ -82,12 +84,24 @@ function(input, output, session) {
     plots <- lapply(matchups, function(match) {
       plot_ly(
         data = df_long %>% filter(Matchup == match),
+        height = max(100 * n_matches, 200)
+      ) %>% 
+      add_trace(
         x = ~Percentage,
         y = ~"",
         color = ~Outcome,
-        colors = c("H_percent" = "blue", "D_percent" = "gray", "A_percent" = "red"),
+        colors = c("H_percent" = df_long %>%
+                     filter(Matchup == match) %>%
+                     pull(Home_color) %>%
+                     unique(),
+                   "D_percent" = "gray",
+                   "A_percent" = df_long %>%
+                     filter(Matchup == match) %>%
+                     pull(Away_color) %>%
+                     unique()),
         type = 'bar',
-        orientation = 'h'
+        orientation = 'h',
+        width = .1
       ) %>%
         layout(
           xaxis = list(
@@ -103,35 +117,151 @@ function(input, output, session) {
             showticklabels = FALSE
           ),
           barmode = 'stack',
-          showlegend = FALSE
+          showlegend = FALSE,
+          annotations = list(
+            list(
+              x = 0,
+              y = 0.7,
+              text = df_long %>%
+                filter(Matchup == match) %>%
+                pull(Home_Team_Name) %>%
+                unique(),
+              xref = "paper",
+              yref = "paper",
+              xanchor = "left",
+              yanchor = "middle",
+              showarrow = FALSE,
+              font = list(
+                size = 16,
+                color = "black"
+              )
+            ),
+            list(
+              x = 0.95,
+              y = 0.7,
+              text = df_long %>%
+                filter(Matchup == match) %>%
+                pull(Away_Team_Name) %>%
+                unique(),
+              xref = "paper",
+              yref = "paper",
+              xanchor = "right",
+              yanchor = "middle",
+              showarrow = FALSE,
+              font = list(
+                size = 16,
+                color = "black"
+              )
+            ),
+            list(
+              x = 0.5,
+              y = 1,
+              text = df_long %>%
+                filter(Matchup == match) %>%
+                pull(Date) %>%
+                unique(),
+              xref = "paper",
+              yref = "paper",
+              xanchor = "center",
+              yanchor = "middle",
+              showarrow = FALSE,
+              font = list(
+                size = 16,
+                color = "black"
+              )
+            ),
+            list(
+              x = 0.5,
+              y = 0.7,
+              text = df_long %>%
+                filter(Matchup == match) %>%
+                pull(Time) %>%
+                unique(),
+              xref = "paper",
+              yref = "paper",
+              xanchor = "center",
+              yanchor = "middle",
+              showarrow = FALSE,
+              font = list(
+                size = 16,
+                color = "black"
+              )
+            ),
+            list(
+              x = (df_long %>% 
+                filter(Matchup == match) %>%
+                filter(Outcome == "H_percent") %>% 
+                pull(Percentage) / 200) - 0.025,
+              y = 0.3,
+              text = df_long %>% 
+                filter(Matchup == match) %>%
+                filter(Outcome == "H_percent") %>% 
+                pull(Percentage),
+              xref = "paper",
+              yref = "paper",
+              xanchor = "center",
+              yanchor = "middle",
+              showarrow = FALSE,
+              font = list(
+                size = 16,
+                color = df_long %>%
+                  filter(Matchup == match) %>%
+                  pull(Home_color) %>%
+                  unique()
+              )
+            ),
+            list(
+              x = (df_long %>% 
+                filter(Matchup == match) %>%
+                filter(Outcome == "H_percent") %>% 
+                pull(Percentage) / 100 + 
+                df_long %>% 
+                filter(Matchup == match) %>%
+                filter(Outcome == "D_percent") %>% 
+                pull(Percentage) / 200) - 0.025,
+              y = 0.3,
+              text = df_long %>% 
+                filter(Matchup == match) %>%
+                filter(Outcome == "D_percent") %>% 
+                pull(Percentage),
+              xref = "paper",
+              yref = "paper",
+              xanchor = "center",
+              yanchor = "middle",
+              showarrow = FALSE,
+              font = list(
+                size = 16,
+                color = "gray"
+              )
+            ),
+            list(
+              x = (1 - df_long %>% 
+                filter(Matchup == match) %>%
+                filter(Outcome == "A_percent") %>% 
+                pull(Percentage) / 200) - 0.025,
+              y = 0.3,
+              text = df_long %>% 
+                filter(Matchup == match) %>%
+                filter(Outcome == "A_percent") %>% 
+                pull(Percentage),
+              xref = "paper",
+              yref = "paper",
+              xanchor = "center",
+              yanchor = "middle",
+              showarrow = FALSE,
+              font = list(
+                size = 16,
+                color = df_long %>%
+                  filter(Matchup == match) %>%
+                  pull(Away_color) %>%
+                  unique()
+              )
+            )
+          )
         )
     })
     
-    fig <- subplot(plots, nrows = n_matches, shareX = TRUE, titleX = TRUE, titleY = FALSE) %>%
-      layout(
-        title = "",
-        legend = list(title = list(text = "Résultat"), orientation = "h", x = 0.3, y = -0.1),
-        margin = list(t = 50)
-      )
-    
-    annotations <- lapply(seq_along(matchups), function(i) {
-      list(
-        x = 0.5,
-        y = 1 - ((i - 1) / n_matches),
-        text = matchups[i],
-        xref = "paper",
-        yref = "paper",
-        xanchor = "center",
-        yanchor = "bottom",
-        showarrow = FALSE,
-        font = list(
-          size = 16,
-          color = "black"
-        )
-      )
-    })
-    
-    fig <- fig %>% layout(annotations = annotations)
+    fig <- subplot(plots, nrows = n_matches, shareX = TRUE, titleX = TRUE, titleY = FALSE)
     
     fig
   })
