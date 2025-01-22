@@ -9,6 +9,8 @@ library(plotly)
 
 root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
+source(file.path(root, "Prono_PL", "compute_brier_score.R"))
+
 sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
 con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
@@ -40,24 +42,9 @@ df_prono <- dbGetQuery(
                         AND c.Away_id = h.A_team;"
 )
 
-dbDisconnect(con)
+# dbDisconnect(con)
 
 function(input, output, session) {
-
-  output$history_table <- renderDataTable({
-    datatable(
-      df_prono %>% 
-        filter(!is.na(result)) %>% 
-        arrange(desc(Date)),
-      options = list(
-        pageLength = 15,
-        dom = 'frtip',
-        autoWidth = TRUE
-      ),
-      rownames = FALSE,
-      class = "stripe hover"
-    )
-  })
   
   output$next_game_graph <- renderPlotly({
     
@@ -65,6 +52,10 @@ function(input, output, session) {
       filter(is.na(result),
              ymd(Date) - today() >= 0) %>%
       arrange(Time)
+    
+    if (nrow(df_prono) == 0) {
+      return(NULL)
+    }
     
     df_prono$Matchup <- paste(df_prono$Home_Team_Name, "vs", df_prono$Away_Team_Name)
     
@@ -86,23 +77,23 @@ function(input, output, session) {
         data = df_long %>% filter(Matchup == match),
         height = max(100 * n_matches, 200)
       ) %>% 
-      add_trace(
-        x = ~Percentage,
-        y = ~"",
-        color = ~Outcome,
-        colors = c("H_percent" = df_long %>%
-                     filter(Matchup == match) %>%
-                     pull(Home_color) %>%
-                     unique(),
-                   "D_percent" = "gray",
-                   "A_percent" = df_long %>%
-                     filter(Matchup == match) %>%
-                     pull(Away_color) %>%
-                     unique()),
-        type = 'bar',
-        orientation = 'h',
-        width = .1
-      ) %>%
+        add_trace(
+          x = ~Percentage,
+          y = ~"",
+          color = ~Outcome,
+          colors = c("H_percent" = df_long %>%
+                       filter(Matchup == match) %>%
+                       pull(Home_color) %>%
+                       unique(),
+                     "D_percent" = "gray",
+                     "A_percent" = df_long %>%
+                       filter(Matchup == match) %>%
+                       pull(Away_color) %>%
+                       unique()),
+          type = 'bar',
+          orientation = 'h',
+          width = .1
+        ) %>%
         layout(
           xaxis = list(
             title = "",
@@ -189,9 +180,9 @@ function(input, output, session) {
             ),
             list(
               x = (df_long %>% 
-                filter(Matchup == match) %>%
-                filter(Outcome == "H_percent") %>% 
-                pull(Percentage) / 200) - 0.025,
+                     filter(Matchup == match) %>%
+                     filter(Outcome == "H_percent") %>% 
+                     pull(Percentage) / 200) - 0.025,
               y = 0.3,
               text = df_long %>% 
                 filter(Matchup == match) %>%
@@ -212,13 +203,13 @@ function(input, output, session) {
             ),
             list(
               x = (df_long %>% 
-                filter(Matchup == match) %>%
-                filter(Outcome == "H_percent") %>% 
-                pull(Percentage) / 100 + 
-                df_long %>% 
-                filter(Matchup == match) %>%
-                filter(Outcome == "D_percent") %>% 
-                pull(Percentage) / 200) - 0.025,
+                     filter(Matchup == match) %>%
+                     filter(Outcome == "H_percent") %>% 
+                     pull(Percentage) / 100 + 
+                     df_long %>% 
+                     filter(Matchup == match) %>%
+                     filter(Outcome == "D_percent") %>% 
+                     pull(Percentage) / 200) - 0.025,
               y = 0.3,
               text = df_long %>% 
                 filter(Matchup == match) %>%
@@ -236,9 +227,9 @@ function(input, output, session) {
             ),
             list(
               x = (1 - df_long %>% 
-                filter(Matchup == match) %>%
-                filter(Outcome == "A_percent") %>% 
-                pull(Percentage) / 200) - 0.025,
+                     filter(Matchup == match) %>%
+                     filter(Outcome == "A_percent") %>% 
+                     pull(Percentage) / 200) - 0.025,
               y = 0.3,
               text = df_long %>% 
                 filter(Matchup == match) %>%
@@ -266,6 +257,118 @@ function(input, output, session) {
     fig
   })
   
+  output$model_brier_box <- renderValueBox({
+    df_compl <- dbGetQuery(
+      con,
+      "SELECT p.H_team,
+          p.A_team,
+          p.H_percent,
+          p.D_percent,
+          p.A_percent,
+          r.result
+      FROM Calendrier AS r
+      JOIN Prono_history AS p ON p.H_team = r.Home_id 
+        AND  p.A_team = r.Away_id
+      WHERE r.result IS NOT NULL;"
+    )
+    brier_value <- brier_score(df_compl, mean=TRUE)
+    valueBox(
+      value = brier_value,
+      subtitle = "Brier score of the model",
+      icon = icon("chart-line"),
+      color = if_else(brier_value < 2/3, "green", "red")
+    )
+  })
   
+  output$opta_brier_box <- renderValueBox({
+    df_compl <- dbGetQuery(
+      con,
+      "SELECT p.H_team,
+          p.A_team,
+          p.H_percent,
+          p.D_percent,
+          p.A_percent,
+          r.result
+      FROM Calendrier AS r
+      JOIN Opta AS p ON p.H_team = r.Home_id 
+        AND  p.A_team = r.Away_id
+      WHERE r.result IS NOT NULL;"
+    )
+    brier_value <- brier_score(df_compl, mean=TRUE)
+    valueBox(
+      value = brier_value,
+      subtitle = "Brier score of Opta",
+      icon = icon("chart-line"),
+      color = if_else(brier_value < 2/3, "green", "red")
+    )
+  })
   
+  output$winamax_brier_box <- renderValueBox({
+    df_compl <- dbGetQuery(
+      con,
+      "SELECT p.H_team,
+          p.A_team,
+          p.H_percent,
+          p.D_percent,
+          p.A_percent,
+          r.result
+      FROM Calendrier AS r
+      JOIN Book_history AS p ON p.H_team = r.Home_id 
+        AND  p.A_team = r.Away_id
+      WHERE r.result IS NOT NULL
+        AND Site='Winamax';"
+    )
+    brier_value <- brier_score(df_compl, mean=TRUE)
+    valueBox(
+      value = brier_value,
+      subtitle = "Winamax score of Opta",
+      icon = icon("chart-line"),
+      color = if_else(brier_value < 2/3, "green", "red")
+    )
+  })
+  
+  output$parionssport_brier_box <- renderValueBox({
+    df_compl <- dbGetQuery(
+      con,
+      "SELECT p.H_team,
+          p.A_team,
+          p.H_percent,
+          p.D_percent,
+          p.A_percent,
+          r.result
+      FROM Calendrier AS r
+      JOIN Book_history AS p ON p.H_team = r.Home_id 
+        AND  p.A_team = r.Away_id
+      WHERE r.result IS NOT NULL
+        AND Site='Parionssport';"
+    )
+    brier_value <- brier_score(df_compl, mean=TRUE)
+    valueBox(
+      value = brier_value,
+      subtitle = "Parionssport score of Opta",
+      icon = icon("chart-line"),
+      color = if_else(brier_value < 2/3, "green", "red")
+    )
+  })
+
+  output$history_table <- renderDataTable({
+    datatable(
+      df_prono %>% 
+        filter(!is.na(result)) %>% 
+        arrange(desc(Date)) %>% 
+        select(-c(Home_color, Away_color)),
+      options = list(
+        pageLength = 15,
+        dom = 'frtip',
+        autoWidth = TRUE
+      ),
+      rownames = FALSE,
+      class = "stripe hover"
+    )
+  })
+  
+  session$onSessionEnded(function() {
+    dbDisconnect(con)
+    cat("Connexion à la base de données fermée.\n")
+  })
 }

@@ -22,7 +22,36 @@ dashboardPage(
       tabItem(tabName = "next_game",
               h1("Prono for the next 3 days"),
               plotlyOutput("next_game_graph")),
-      tabItem(tabName = "perf_model", h2("Brier Score!")),
+      tabItem(
+        tabName = "perf_model", 
+        h2("Brier Score!"),
+        tabBox(
+          title = "Performance Metrics",
+          id = "tabset1",
+          width = 12,
+          tabPanel(
+            title = "Brier Score",
+            h3("Analyse du Brier Score"),
+            fluidRow(
+              valueBoxOutput("model_brier_box", width = 12)
+            ),
+            fluidRow(
+              valueBoxOutput("opta_brier_box", width = 12)
+            ),
+            fluidRow(
+              valueBoxOutput("winamax_brier_box", width = 12)
+            ),
+            fluidRow(
+              valueBoxOutput("parionssport_brier_box", width = 12)
+            )
+          ),
+          tabPanel(
+            title = "Autre Métrique",
+            h3("Autre Analyse"),
+            textOutput("other_metric_text")
+          )
+        )
+      ),
       tabItem(tabName = "history", h2("Table of last prono"),
               dataTableOutput("history_table"))
     )
