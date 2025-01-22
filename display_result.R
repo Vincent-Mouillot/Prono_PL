@@ -2,6 +2,7 @@ library(DBI)
 library(RSQLite)
 library(tidyverse)
 library(rprojroot)
+library(lubridate)
 
 root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
@@ -34,6 +35,10 @@ drive_update(file, media = temp_db_path)
 
 # Fonction pour afficher le tableau dans le format souhaité
 print_table <- function(df) {
+  
+  df <- df %>% 
+    filter(ymd(Date) - today() == 0)
+  
   if(nrow(df) != 0){
     output <- paste0(data$Date %>% unique(), "\n")
     
