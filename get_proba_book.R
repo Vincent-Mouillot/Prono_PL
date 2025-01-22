@@ -102,9 +102,9 @@ df_book <- bind_rows(all_dfs) %>%
   mutate(H_prob = (1 / H),
          D_prob = (1 / D),
          A_prob = (1 / A),
-         H_percent = round(H_prob / (H_prob + D_prob + A_prob), 2),
-         D_percent = round(D_prob / (H_prob + D_prob + A_prob), 2),
-         A_percent = round(A_prob / (H_prob + D_prob + A_prob), 2)) %>% 
+         H_percent = round((H_prob / (H_prob + D_prob + A_prob)) * 100, 0),
+         D_percent = round((D_prob / (H_prob + D_prob + A_prob)) * 100, 0),
+         A_percent = round((A_prob / (H_prob + D_prob + A_prob)) * 100, 0)) %>% 
   select(-c(H_prob, D_prob, A_prob))
 
 # Connexion à la base de données SQLite
