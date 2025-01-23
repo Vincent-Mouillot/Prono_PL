@@ -257,6 +257,79 @@ function(input, output, session) {
     fig
   })
   
+  output$side_predictions <- renderPlotly({
+    df_long <- df_prono %>%
+      select(H_percent, D_percent, A_percent) %>%
+      pivot_longer(cols = everything(), names_to = "Category", values_to = "Value") %>%
+      mutate(Category = factor(Category, levels = c("H_percent", "D_percent", "A_percent")))
+    
+    p <- ggplot(df_long, aes(x = Category, y = Value, fill = Category)) +
+      geom_boxplot() +
+      theme_minimal() +
+      ylim(c(0, 100)) +
+      theme(legend.position = "none") +
+      labs(x = "", y = "", title = "Boxplot of side predictions")
+    
+    ggplotly(p)
+  })
+  
+  output$nb_good_pr <- renderValueBox({
+    df <- df_prono %>% 
+      filter(!is.na(result)) %>% 
+      mutate(Score = paste0(score_home, "-", score_away),
+                      Result_pred = names(df_prono %>% 
+                                            select(H_percent, A_percent, D_percent))[max.col(select(., H_percent, A_percent, D_percent))] %>% 
+                        str_remove("_percent")) %>% 
+      select(result, Result_pred) %>% 
+      mutate(Good_result = if_else(
+        result == Result_pred,
+        TRUE,
+        FALSE
+        )
+      )
+    nb <- df$Good_result %>% 
+      sum()
+    nb_prono <- df$Good_result %>% 
+      length()
+    prop <- (nb / nb_prono) %>% 
+      round(2) * 100
+    valueBox(
+      value = paste0(nb, "/", nb_prono, " or ", prop, "%"),
+      subtitle = "Number of good outcome predictions",
+      icon = icon("chart-line"),
+      color = "blue"
+    )
+  })
+  
+  output$nb_good_result <- renderValueBox({
+    df <- df_prono %>% 
+      filter(!is.na(result)) %>% 
+      mutate(Score = paste0(score_home, "-", score_away),
+             Result_pred = names(df_prono %>% 
+                                   select(H_percent, A_percent, D_percent))[max.col(select(., H_percent, A_percent, D_percent))] %>% 
+               str_remove("_percent")) %>% 
+      select(Score, score_pred) %>% 
+      mutate(
+        Good_score = if_else(
+          Score == score_pred,
+          TRUE,
+          FALSE
+        )
+      )
+    nb <- df$Good_score %>% 
+      sum()
+    nb_prono <- df$Score %>% 
+                   length()
+    prop <- (nb / nb_prono) %>% 
+      round(2) * 100
+    valueBox(
+      value = paste0(nb, "/", nb_prono, " or ", prop, "%"),
+      subtitle = "Number of good result predictions",
+      icon = icon("chart-line"),
+      color = "blue"
+    )
+  })
+  
   output$model_brier_box <- renderValueBox({
     df_compl <- dbGetQuery(
       con,

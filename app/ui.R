@@ -30,6 +30,20 @@ dashboardPage(
           id = "tabset1",
           width = 12,
           tabPanel(
+            title = "Predictions",
+            fluidRow(
+              column(
+                width = 4,
+                valueBoxOutput("nb_good_pr", width = 12),
+                valueBoxOutput("nb_good_result", width = 12)
+              ),
+              column(
+                width = 8,
+                plotlyOutput("side_predictions", width = "100%")
+              )
+            )
+          ),
+          tabPanel(
             title = "Brier Score",
             h3("Analyse du Brier Score"),
             fluidRow(
@@ -44,11 +58,6 @@ dashboardPage(
             fluidRow(
               valueBoxOutput("parionssport_brier_box", width = 12)
             )
-          ),
-          tabPanel(
-            title = "Autre Métrique",
-            h3("Autre Analyse"),
-            textOutput("other_metric_text")
           )
         )
       ),
