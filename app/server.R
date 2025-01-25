@@ -51,7 +51,7 @@ function(input, output, session) {
     df_prono <- df_prono %>% 
       filter(is.na(result),
              ymd(Date) - today() >= 0) %>%
-      arrange(Time)
+      arrange(Date, Time)
     
     if (nrow(df_prono) == 0) {
       return(NULL)
