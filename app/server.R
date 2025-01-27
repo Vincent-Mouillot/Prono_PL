@@ -430,10 +430,12 @@ function(input, output, session) {
         filter(!is.na(result)) %>% 
         arrange(desc(Date)) %>% 
         select(-c(Home_color, Away_color)),
+      filter = list(position = 'top', clear = FALSE),
       options = list(
         pageLength = 15,
         dom = 'frtip',
-        autoWidth = TRUE
+        autoWidth = TRUE,
+        scrollX = TRUE
       ),
       rownames = FALSE,
       class = "stripe hover"
