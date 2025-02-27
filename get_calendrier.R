@@ -70,6 +70,36 @@ calendrier <- calendrier %>%
     Away_id = away_team_id
   )
 
+transco_wk_date <- calendrier %>%
+  group_by(Wk) %>%
+  count(Date) %>%
+  arrange(desc(n)) %>%
+  slice(1) %>%
+  select(-n) %>% 
+  ungroup()
+
+all_date <- seq.Date(
+  from = calendrier$Date %>% min() %>% as.Date(), 
+  to = calendrier$Date %>% max() %>% as.Date(), 
+  by='day'
+) %>% 
+  as.character() %>% 
+  as_tibble_col(column_name = "Date")
+
+transco_wk_date <- transco_wk_date %>% 
+  right_join(
+    all_date
+  ) %>% 
+  arrange(Date) %>% 
+  mutate(Wk = Wk %>% zoo::na.locf(na.rm = FALSE)) %>% 
+  mutate(Wk = Wk %>% zoo::na.locf(na.rm = FALSE, fromLast = TRUE)) %>% 
+  mutate(Saison = paste0(calendrier$Date %>% 
+                         year() %>% min() %>% unique(),
+                       "-",
+                       calendrier$Date %>% 
+                         year() %>% max() %>% unique())) %>% 
+  select(Saison, Wk, Date)
+
 # Define the function to perform the database operations
 perform_db_operations <- function() {
   # Define the name of the SQLite database file
@@ -103,9 +133,24 @@ perform_db_operations <- function() {
     return(NULL)
   })
   
+  tryCatch({
+    dbExecute(con, "DROP TABLE IF EXISTS Wk_Date;")
+  }, error = function(e) {
+    message("Error: Could not drop the table 'Wk_Date'.")
+    message("Details: ", e$message)
+    dbDisconnect(con)
+    return(NULL)
+  })
+  
   # Check if the 'calendrier' DataFrame exists
   if (!exists("calendrier")) {
     message("Error: 'calendrier' DataFrame does not exist.")
+    dbDisconnect(con)
+    return(NULL)
+  }
+  
+  if (!exists("transco_wk_date")) {
+    message("Error: 'transco_wk_date' DataFrame does not exist.")
     dbDisconnect(con)
     return(NULL)
   }
@@ -115,6 +160,19 @@ perform_db_operations <- function() {
     dbWriteTable(con,
                  "Calendrier",
                  calendrier,
+                 overwrite = TRUE,
+                 row.names = FALSE)
+  }, error = function(e) {
+    message("Error: Could not write the DataFrame to the database.")
+    message("Details: ", e$message)
+    dbDisconnect(con)
+    return(NULL)
+  })
+  
+  tryCatch({
+    dbWriteTable(con,
+                 "Wk_Date",
+                 transco_wk_date,
                  overwrite = TRUE,
                  row.names = FALSE)
   }, error = function(e) {
