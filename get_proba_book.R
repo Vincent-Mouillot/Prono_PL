@@ -82,7 +82,7 @@ df_book <- bind_rows(all_dfs) %>%
                                    Other_Names)),
     by = c("Home" = "Other_Names")
   ) %>% 
-  mutate(Home_id = coalesce(Id.x, Id.y)) %>%
+  mutate(H_team = coalesce(Id.x, Id.y)) %>%
   select(-Id.x, -Id.y) %>% 
   left_join(
     df_team %>% 
@@ -97,14 +97,14 @@ df_book <- bind_rows(all_dfs) %>%
                                    Other_Names)),
     by = c("Away" = "Other_Names")
   ) %>% 
-  mutate(Away_id = coalesce(Id.x, Id.y)) %>%
-  select(Home_id, Away_id, Site, H, D, A) %>% 
+  mutate(A_team = coalesce(Id.x, Id.y)) %>%
+  select(H_team, A_team, Site, H, D, A) %>% 
   mutate(H_prob = (1 / H),
          D_prob = (1 / D),
          A_prob = (1 / A),
-         H_percent = round(H_prob / (H_prob + D_prob + A_prob), 2),
-         D_percent = round(D_prob / (H_prob + D_prob + A_prob), 2),
-         A_percent = round(A_prob / (H_prob + D_prob + A_prob), 2)) %>% 
+         H_percent = round((H_prob / (H_prob + D_prob + A_prob)) * 100, 0),
+         D_percent = round((D_prob / (H_prob + D_prob + A_prob)) * 100, 0),
+         A_percent = round((A_prob / (H_prob + D_prob + A_prob)) * 100, 0)) %>% 
   select(-c(H_prob, D_prob, A_prob))
 
 # Connexion à la base de données SQLite
@@ -113,8 +113,8 @@ con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
 # Création de la table Book_history si elle n'existe pas
 dbExecute(con, "
   CREATE TABLE IF NOT EXISTS Book_history (
-    Home_id TEXT,
-    Away_id TEXT,
+    H_team TEXT,
+    A_team TEXT,
     Site TEXT,
     H REAL,
     D REAL,
@@ -122,7 +122,7 @@ dbExecute(con, "
     H_percent REAL,
     D_percent REAL,
     A_percent REAL,
-    PRIMARY KEY (Home_id, Away_id, Site)
+    PRIMARY KEY (H_team, A_team, Site)
   );
 ")
 
@@ -131,8 +131,8 @@ insert_or_update_book_history <- function(df_book, con) {
   
   for (i in 1:nrow(df_book)) {
     # Extraction des valeurs d'une ligne du dataframe
-    home_id <- df_book$Home_id[i]
-    away_id <- df_book$Away_id[i]
+    H_team <- df_book$H_team[i]
+    A_team <- df_book$A_team[i]
     site <- df_book$Site[i]
     h <- df_book$H[i]
     d <- df_book$D[i]
@@ -144,24 +144,24 @@ insert_or_update_book_history <- function(df_book, con) {
     # Vérifier si la combinaison existe déjà avec une requête paramétrée
     query <- dbGetQuery(con, "
       SELECT COUNT(*) AS count FROM Book_history
-      WHERE Home_id = ? AND Away_id = ? AND Site = ?", 
-                        params = list(home_id, away_id, site)
+      WHERE H_team = ? AND A_team = ? AND Site = ?", 
+                        params = list(H_team, A_team, site)
     )
     
     if (query$count == 0) {
       # Si la combinaison n'existe pas, on insère les données (requête paramétrée)
       dbExecute(con, "
-        INSERT INTO Book_history (Home_id, Away_id, Site, H, D, A, H_percent, D_percent, A_percent)
+        INSERT INTO Book_history (H_team, A_team, Site, H, D, A, H_percent, D_percent, A_percent)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                params = list(home_id, away_id, site, h, d, a, h_percent, d_percent, a_percent)
+                params = list(H_team, A_team, site, h, d, a, h_percent, d_percent, a_percent)
       )
     } else {
       # Si la combinaison existe, on met à jour les autres colonnes (requête paramétrée)
       dbExecute(con, "
         UPDATE Book_history
         SET H = ?, D = ?, A = ?, H_percent = ?, D_percent = ?, A_percent = ?
-        WHERE Home_id = ? AND Away_id = ? AND Site = ?", 
-                params = list(h, d, a, h_percent, d_percent, a_percent, home_id, away_id, site)
+        WHERE H_team = ? AND A_team = ? AND Site = ?", 
+                params = list(h, d, a, h_percent, d_percent, a_percent, H_team, A_team, site)
       )
     }
   }

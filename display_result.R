@@ -40,7 +40,7 @@ print_table <- function(df) {
     filter(ymd(Date) - today() == 0)
   
   if(nrow(df) != 0){
-    output <- paste0(data$Date %>% unique(), "\n")
+    output <- paste0(df$Date %>% unique(), "\n")
     
     for (i in 1:nrow(df)) {
       output <- paste0(output, sprintf("| %-4s | %-3s | %-3s | %-3s | %-3s | %-3s | %-3s | %-3s |\n", 
