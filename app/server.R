@@ -32,6 +32,9 @@ df_prono <- dbGetQuery(
       h.A_percent,
       h.score_pred,
       h.score_pred_percent,
+      o.H_percent AS H_percent_opta,
+      o.D_percent AS D_percent_opta,
+      o.A_percent AS A_percent_opta,
       c.score_home,
       c.score_away,
       c.result
@@ -39,7 +42,9 @@ df_prono <- dbGetQuery(
    JOIN Table_teams AS t1 ON h.H_team = t1.Id
    JOIN Table_teams AS t2 ON h.A_team = t2.Id
    JOIN Calendrier AS c ON c.Home_id = h.H_team
-                        AND c.Away_id = h.A_team;"
+                        AND c.Away_id = h.A_team
+   JOIN Opta AS o ON o.H_team = h.H_team
+                        AND o.A_team = h.A_team;"
 )
 
 # dbDisconnect(con)
@@ -255,6 +260,10 @@ function(input, output, session) {
     fig <- subplot(plots, nrows = n_matches, shareX = TRUE, titleX = TRUE, titleY = FALSE)
     
     fig
+  })
+  
+  output$comp_next_game <- render_gt({
+    
   })
   
   output$side_predictions <- renderPlotly({

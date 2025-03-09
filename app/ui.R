@@ -1,6 +1,7 @@
 library(shiny)
 library(shinydashboard)
 library(plotly)
+library(gt)
 
 dashboardPage(
   dashboardHeader(title = "Pronos PL"),
@@ -21,7 +22,8 @@ dashboardPage(
       tabItem(tabName = "home", h2("Bienvenue dans l'application!")),
       tabItem(tabName = "next_game",
               h1("Prono for the next 3 days"),
-              plotlyOutput("next_game_graph")),
+              plotlyOutput("next_game_graph"),
+              gt_output("comp_next_game")),
       tabItem(
         tabName = "perf_model", 
         h2("Brier Score!"),
