@@ -1,6 +1,7 @@
 root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
 source(file.path(root, "Prono_PL", "linear_regression_pred.R"))
+source(file.path(root, "Prono_PL", "adjusted_perc.R"))
 
 results_list <- list()
 results_matrix_list <- list()
@@ -61,9 +62,15 @@ for (i in 1:nrow(data)) {
 data <- data %>%
   mutate(score_pred = paste0(max_coords[, 1] - 1, "-", max_coords[, 2] - 1),
          `score_pred_%` = max_values * 100,
-         `H(%)` = lower_sums * 100,
-         `D(%)` = diagonal_sums * 100,
-         `A(%)` = upper_sums * 100) %>% 
+         lower_sums = lower_sums,
+         diagonal_sums = diagonal_sums,
+         upper_sums = upper_sums) %>%
+  rowwise() %>%
+  mutate(adjusted = list(adjusted_perc(lower_sums, diagonal_sums, upper_sums))) %>%
+  ungroup() %>%
+  mutate(`H(%)` = sapply(adjusted, function(x) x$H),
+         `D(%)` = sapply(adjusted, function(x) x$D),
+         `A(%)` = sapply(adjusted, function(x) x$A)) %>%
   select(Date, Time, H_team = Team_id, `H(%)`, `D(%)`, `A(%)`, A_team = Opponent_id, score_pred, `score_pred_%`) %>% 
   mutate_if(is.numeric, ~round(., 0))
 }else{
