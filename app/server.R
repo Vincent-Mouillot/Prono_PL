@@ -33,9 +33,6 @@ df_prono <- dbGetQuery(
       h.A_percent,
       h.score_pred,
       h.score_pred_percent,
-      o.H_percent AS H_percent_opta,
-      o.D_percent AS D_percent_opta,
-      o.A_percent AS A_percent_opta,
       c.score_home,
       c.score_away,
       c.result
@@ -43,9 +40,7 @@ df_prono <- dbGetQuery(
    JOIN Table_teams AS t1 ON h.H_team = t1.Id
    JOIN Table_teams AS t2 ON h.A_team = t2.Id
    JOIN Calendrier AS c ON c.Home_id = h.H_team
-                        AND c.Away_id = h.A_team
-   JOIN Opta AS o ON o.H_team = h.H_team
-                        AND o.A_team = h.A_team;"
+                        AND c.Away_id = h.A_team;"
 )
 
 # dbDisconnect(con)
@@ -285,6 +280,9 @@ function(input, output, session) {
    WHERE c.result IS NULL;"
     )
     
+    if (nrow(df_model) == 0) {
+      return(NULL)
+    }
     
     df_opta <- dbGetQuery(
       con,
@@ -540,7 +538,7 @@ function(input, output, session) {
     brier_value <- brier_score(df_compl, mean=TRUE)
     valueBox(
       value = brier_value,
-      subtitle = "Winamax score of Opta",
+      subtitle = "Brier score of Winamax",
       icon = icon("chart-line"),
       color = if_else(brier_value < 2/3, "green", "red")
     )
@@ -564,7 +562,7 @@ function(input, output, session) {
     brier_value <- brier_score(df_compl, mean=TRUE)
     valueBox(
       value = brier_value,
-      subtitle = "Parionssport score of Opta",
+      subtitle = "Brier score of Parions Sport",
       icon = icon("chart-line"),
       color = if_else(brier_value < 2/3, "green", "red")
     )

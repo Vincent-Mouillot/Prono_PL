@@ -21,12 +21,22 @@ dashboardPage(
     tabItems(
       tabItem(tabName = "home", h2("Bienvenue dans l'application!")),
       tabItem(tabName = "next_game",
-              h1("Prono for the next 3 days"),
-              plotlyOutput("next_game_graph"),
-              gt_output("comp_next_game")),
+        tabBox(
+          title = "Prono",
+          id = "tabset_prono",
+          width = 12,
+          tabPanel(
+            title = "Predictions of the model",
+            plotlyOutput("next_game_graph")
+          ),
+          tabPanel(
+            title = "Comparaison with bookmakers",
+            gt_output("comp_next_game")
+          )
+        )
+      ),
       tabItem(
         tabName = "perf_model", 
-        h2("Brier Score!"),
         tabBox(
           title = "Performance Metrics",
           id = "tabset1",
