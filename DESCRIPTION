@@ -1,0 +1,35 @@
+Package: Prono_pl
+Type: Project
+Title: Prono pl
+Version: 0.1.0
+Author: Mouillot Vincent
+Description: None
+License: MIT
+Imports:
+    shiny,
+    tidyverse,
+    DT,
+    DBI,
+    RSQLite,
+    rprojroot,
+    ggplot2,
+    plotly,
+    gt,
+    shinydashboard,
+    data.table,
+    factoextra,
+    dplyr,
+    tidyr,
+    lubridate,
+    stringr,
+    rvest,
+    purrr,
+    progress,
+    glue,
+    googledrive,
+    gargle,
+    geosphere,
+    zoo,
+    caret,
+    quantreg,
+    taskscheduleR
