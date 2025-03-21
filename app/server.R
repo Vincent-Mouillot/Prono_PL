@@ -8,13 +8,13 @@ library(ggplot2)
 library(plotly)
 library(gt)
 
-#root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
+root <<- rprojroot::find_root(rprojroot::has_dir("Prono_PL"))
 
 source(file.path(root, "Prono_PL", "compute_brier_score.R"))
 
-#sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
+sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
-con <- dbConnect(RSQLite::SQLite(), dbname = "my_database.db")
+con <- dbConnect(RSQLite::SQLite(), dbname = "../my_database.db")
 
 df_team <- dbGetQuery(con, "SELECT * FROM Table_teams
                       WHERE Comp = 'Premier League';")
