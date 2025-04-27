@@ -19,7 +19,7 @@ dashboardPage(
       tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
     ),
     tabItems(
-      tabItem(tabName = "home", h2("Bienvenue dans l'application!")),
+      tabItem(tabName = "home", h2("Bienvenue dans l'application!"), print(getwd())),
       tabItem(tabName = "next_game",
         tabBox(
           title = "Prono",

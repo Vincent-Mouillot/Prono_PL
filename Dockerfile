@@ -1,3 +1,4 @@
+# Utiliser une image de base Shiny
 FROM rocker/shiny:latest
 
 # Installer les dépendances système nécessaires
@@ -13,13 +14,13 @@ COPY DESCRIPTION /DESCRIPTION
 # Installer les dépendances R listées dans DESCRIPTION
 RUN R -e "install.packages('remotes'); remotes::install_deps(dependencies=TRUE)"
 
-# Copier les fichiers de l'application dans le répertoire de Shiny Server
-COPY ./app /srv/shiny-server/
+# Copier tout le projet (y compris les fichiers, dossiers, etc.) dans /srv/shiny-server/
+COPY ./ /srv/shiny-server/
 
 # Donner les permissions appropriées à l'utilisateur shiny
 RUN chown -R shiny:shiny /srv/shiny-server
 
-# Exposer le port
+# Exposer le port de Shiny Server
 EXPOSE 3838
 
 # Lancer Shiny Server
