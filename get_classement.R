@@ -10,43 +10,44 @@ library(glue)
 
 df <- data.frame(
   Squad = c(
-    "Manchester City",
-    "Arsenal",
     "Liverpool",
-    "Aston Villa",
-    "Tottenham",
+    "Arsenal",
+    "Manchester City",
     "Chelsea",
     "Newcastle Utd",
-    "Manchester Utd",
-    "West Ham",
-    "Crystal Palace",
+    "Aston Villa",
+    "Nott'ham Forest",
     "Brighton",
     "Bournemouth",
-    "Fulham",
-    "Wolves",
-    "Everton",
     "Brentford",
-    "Nott'ham Forest",
-    "Leicester City",
-    "Ipswich Town",
-    "Southampton"
+    "Fulham",
+    "Crystal Palace",
+    "Everton",
+    "West Ham",
+    "Manchester Utd",
+    "Wolves",
+    "Tottenham",
+    "Leeds United",
+    "Burnley",
+    "Sunderland"
   ),
   J0 = 1:20
 ) %>% arrange(Squad)
 
+# Define the name of the SQLite database file
+sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
-
-url <- "https://fbref.com/en/comps/9/Premier-League-Stats"
+url <- "https://fbref.com/en/comps/9/2025-2026/2025-2026-Premier-League-Stats"
 page_classement <- read_html(url)
 
 team_id <- page_classement %>%
-  html_element("#results2024-202591_overall") %>%
+  html_element("#results2025-202691_overall") %>%
   html_elements('td[data-stat="team"] a') %>%
   html_attr("href") %>%
   str_sub(12, 19)
 
 class <- page_classement %>%
-  html_element("#results2024-202591_overall") %>%
+  html_element("#results2025-202691_overall") %>%
   html_table() %>%
   select(Rk, MP) %>%
   mutate(Id = team_id)
@@ -58,17 +59,35 @@ most_common_value <- class %>%
   slice(1) %>%
   pull(MP)
 
+
 matchday <- paste0("J", most_common_value)
 
-class <- class %>%
-  select(Id, Rk) %>%
-  rename(!!matchday := Rk)
+if (most_common_value == 0) {
+  class <- class %>% 
+    select(Id) %>%
+    mutate(Rk = df$J0) %>% 
+    rename(!!matchday := Rk)
+  
+  con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
+  dbWriteTable(con,
+               "Classement",
+               class,
+               overwrite = TRUE,
+               row.names = FALSE)
+} else{
+  class <- class %>%
+    select(Id, Rk) %>%
+    rename(!!matchday := Rk)
+}
 
-# Define the name of the SQLite database file
-sqlite_file <- file.path(root, "Prono_PL", "my_database.db")
 
 # Function to perform database operations
 perform_db_operations <- function() {
+
+  if (most_common_value == 0) {
+    return(message("Operation done manually"))
+  }
+  
   # Attempt to connect to the SQLite database
   con <- try(dbConnect(RSQLite::SQLite(), dbname = sqlite_file), silent = TRUE)
   

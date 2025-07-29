@@ -34,10 +34,14 @@ teams <- page %>%
          Gender,
          Comp,
          Other_Names = `Other Names`) %>% 
-  filter(Comp != "",
+  filter((Comp != "" |
+            Squad %in% c("Burnley FC", "Leeds United FC", "Sunderland AFC")),
          Comp != "Premier League 2") %>% 
-  mutate(Other_Names = Squad %>%
-           str_remove("\\b(FC|AFC )\\b")%>%
+  mutate(Comp = if_else(Squad %in% c("Burnley FC", "Leeds United FC", "Sunderland AFC"),
+                        "Premier League",
+                        Comp),
+         Other_Names = Squad %>%
+           str_remove("\\b(FC|AFC |AFC)\\b")%>%
            str_trim(side = "right"))
 ```
 
@@ -58,18 +62,25 @@ teams <- teams %>%
   left_join(df_stadium, by="Other_Names")
 ```
 ```{r}
-abv <- c("BOU", "ARS", "AVL", "BRE", "BHA", "CHE", "CRY", "EVE", "FUL", "IPS", "LEI", "LIV", "MCI", "MUN", "NEW", "NFO", "SOU", "TOT", "WHU", "WOL")
+abv <- c("BOU", "ARS", "AVL", "BRE", "BHA", "BUR", "CHE", "CRY", "EVE", "FUL", "LEE", "LIV", "MCI", "MUN", "NEW", "NFO", "SUN", "TOT", "WHU", "WOL")
+
+opta_name <- c("Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton",
+        "Burnley", "Chelsea", "Crystal Palace", "Everton", "Fulham", "Leeds",
+        "Liverpool", "Man City", "Man Utd", "Newcastle",
+        "Nottm Forest", "Sunderland", "Tottenham", "West Ham", "Wolves")
+
+color <- c("#DA291C", "#EF0107","#95BFE5","#E4010B","#0057B8","#6E1142","#1B458F","#003399","#F0F0F0","#0A3A89","#FCE11A","#C8102E","#6CABDD","#DA291C","#241F20","#DD0000","#EE1E2D","#132257","#7A263A","#FDB913")
 
 pl_team <- teams %>% 
   filter(Comp == 'Premier League') %>% 
   select(Id) %>% 
-  mutate(Abv = abv)
+  mutate(Abv = abv,
+         Opta_Name = opta_name,
+         Color = color)
 
 teams <- teams %>% 
   left_join(pl_team, by="Id")
 ```
-
-
 
 # Write the table in a database
 
