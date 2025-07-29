@@ -19,16 +19,16 @@ except:
 data = {
     "Opta_Name": [
         "Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton",
-        "Chelsea", "Crystal Palace", "Everton", "Fulham", "Ipswich",
-        "Leicester", "Liverpool", "Man City", "Man Utd", "Newcastle",
-        "Nottm Forest", "Southampton", "Tottenham", "West Ham", "Wolves"
+        "Burnley", "Chelsea", "Crystal Palace", "Everton", "Fulham",
+        "Leeds", "Liverpool", "Man City", "Man Utd", "Newcastle",
+        "Nottm Forest", "Sunderland", "Tottenham", "West Ham", "Wolves"
     ],
     "Other_Names": [
         "Arsenal", "Aston Villa", "Bournemouth", "Brentford", 
-        "Brighton & Hove Albion", "Chelsea", "Crystal Palace", "Everton", 
-        "Fulham", "Ipswich Town", "Leicester City", "Liverpool", 
+        "Brighton & Hove Albion", "Chelsea", "Burnley", "Crystal Palace",
+        "Everton", "Fulham", "Leeds United", "Liverpool", 
         "Manchester City", "Manchester United", "Newcastle United", 
-        "Nottingham Forest", "Southampton", "Tottenham Hotspur", 
+        "Nottingham Forest", "Sunderland", "Tottenham Hotspur", 
         "West Ham United", "Wolverhampton Wanderers"
     ]
 }
