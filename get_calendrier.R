@@ -8,7 +8,7 @@ library(DBI)
 library(RSQLite)
 library(glue)
 
-url <- "https://fbref.com/en/comps/9/calendrier/Scores-et-tableaux-Premier-League"
+url <- "https://fbref.com/en/comps/9/2025-2026/schedule/2025-2026-Premier-League-Scores-and-Fixtures"
 page_calend <- read_html(url)
 match_report_links <- page_calend %>% html_elements(xpath = "//a[contains(., 'Match Report')]")
 

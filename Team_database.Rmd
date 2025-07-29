@@ -34,10 +34,14 @@ teams <- page %>%
          Gender,
          Comp,
          Other_Names = `Other Names`) %>% 
-  filter(Comp != "",
+  filter((Comp != "" |
+            Squad %in% c("Burnley FC", "Leeds United FC", "Sunderland AFC")),
          Comp != "Premier League 2") %>% 
-  mutate(Other_Names = Squad %>%
-           str_remove("\\b(FC|AFC )\\b")%>%
+  mutate(Comp = if_else(Squad %in% c("Burnley FC", "Leeds United FC", "Sunderland AFC"),
+                        "Premier League",
+                        Comp),
+         Other_Names = Squad %>%
+           str_remove("\\b(FC|AFC |AFC)\\b")%>%
            str_trim(side = "right"))
 ```
 
@@ -58,7 +62,7 @@ teams <- teams %>%
   left_join(df_stadium, by="Other_Names")
 ```
 ```{r}
-abv <- c("BOU", "ARS", "AVL", "BRE", "BHA", "CHE", "CRY", "EVE", "FUL", "IPS", "LEI", "LIV", "MCI", "MUN", "NEW", "NFO", "SOU", "TOT", "WHU", "WOL")
+abv <- c("BOU", "ARS", "AVL", "BRE", "BHA", "BUR", "CHE", "CRY", "EVE", "FUL", "LEE", "LIV", "MCI", "MUN", "NEW", "NFO", "SUN", "TOT", "WHU", "WOL")
 
 pl_team <- teams %>% 
   filter(Comp == 'Premier League') %>% 
