@@ -30,7 +30,7 @@ do_preprocessing <- function(database){
   
   dbDisconnect(con)
   
-  df_stats_agg <- compute_kmeans_team(sqlite_file = database, k = 3)
+  df_stats_agg <- compute_kmeans_team(sqlite_file = sqlite_file, k = 3)
   
   df_calendrier <- compute_distance(df_calendrier, df_team)
   df_calendrier <- compute_diff_class(df_calendrier, df_classement)
