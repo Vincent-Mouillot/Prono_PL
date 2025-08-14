@@ -21,3 +21,10 @@ file <- drive_get("my_database.db")
 # Télécharger le fichier .db dans un dossier temporaire
 temp_db_path <- file.path(root, "Prono_PL", "my_database.db")
 drive_download(file, path = temp_db_path, overwrite = TRUE)
+
+# Exemple: Télécharger un fichier
+file2 <- drive_get("my_database.db")
+
+# Télécharger le fichier .db dans un dossier temporaire
+temp_db_path2 <- file.path(root, "Prono_PL", "my_database_2024_2025.db")
+drive_download(file2, path = temp_db_path2, overwrite = TRUE)
