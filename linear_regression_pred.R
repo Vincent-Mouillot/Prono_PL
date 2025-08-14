@@ -23,6 +23,8 @@ summary(step_model_lin)
 final_model_lin <- step_model_lin
 
 # Quantile regression
+nzv <- nearZeroVar(encoded_training_df)
+encoded_training_df <- encoded_training_df[, -nzv]
 model_rq <- rq(Score ~ ., data = encoded_training_df, tau = 0.55)
 step_model_rq <- MASS::stepAIC(model_rq, direction = "both")
 summary(step_model_rq)
