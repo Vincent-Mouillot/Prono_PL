@@ -20,7 +20,7 @@ compute_kmeans_team <- function(sqlite_file, k = 3, columns_to_use = c(
   
   dbDisconnect(con)
   
-  if(nrow(df_stats) != 0){
+  if(nrow(df_stats) > 300){ #300=20*15 (~nb players played after 1 Gameweek)
     
     df_stats_agg <- df_stats %>%
       group_by(team, game) %>%
