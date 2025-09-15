@@ -15,7 +15,7 @@ jobs:
 
       - name: Update code on Raspberry Pi
         run: |
-          cd /home/pi/mon_projet
+          cd /home/Prono_PL
           git fetch --all
           git pull --ff-only
           echo "Code mis à jour avec succès !"
