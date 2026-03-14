@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS games (
     datetime  TEXT,
     h_team    TEXT,
     a_team    TEXT,
+    h_team_short    TEXT,
+    a_team_short    TEXT,
     goals_h   INTEGER,
     goals_a   INTEGER,
     xg_h      REAL,
@@ -87,10 +89,25 @@ CREATE TABLE IF NOT EXISTS games (
     proba_l   INTEGER,
     result    TEXT
 );
+
+CREATE TABLE IF NOT EXISTS initial_ranking (
+    season  INTEGER,
+    title   TEXT,
+    rank    INTEGER,
+    PRIMARY KEY (season, title)
+);
 """)
 
 con.commit()
 print("Tables created successfully")
+
+# ── Insert initial rankings ───────────────────────────────────────────────────
+ 
+from initial_ranking import insert_initial_ranking, ALL_SEASONS
+ 
+for season, df in ALL_SEASONS.items():
+    insert_initial_ranking(con, df, season)
+ 
 
 # ── Check ─────────────────────────────────────────────────────────────────────
 
