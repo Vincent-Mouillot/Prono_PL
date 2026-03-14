@@ -29,8 +29,10 @@ def match_to_df(match: dict) -> pd.DataFrame:
     return pd.DataFrame([{
         'id':       match['id'],
         'datetime': match['datetime'],
-        'h_team':   match['h']['short_title'],
-        'a_team':   match['a']['short_title'],
+        'h_team':   match['h']['title'],
+        'a_team':   match['a']['title'],
+        'h_team_short':   match['h']['short_title'],
+        'a_team_short':   match['a']['short_title'],
         'goals_h':  int(match['goals']['h']) if is_played else None,
         'goals_a':  int(match['goals']['a']) if is_played else None,
         'xg_h':     float(match['xG']['h']) if is_played else None,
