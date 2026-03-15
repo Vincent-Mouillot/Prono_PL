@@ -1,24 +1,8 @@
 import sqlite3
 import pandas as pd
-from pathlib import Path
 from understatapi import UnderstatClient
+from database.get_cloud_db import DB_PATH
 
-# ── Config ────────────────────────────────────────────────────────────────────
-
-root = Path(__file__).resolve().parent
-while not (root / "Prono_PL").exists() and root != root.parent:
-    root = root.parent
-
-if not (root / "Prono_PL").exists():
-    raise FileNotFoundError("Could not find 'Prono_PL' directory in any parent folder")
-
-DB_PATH = root / "Prono_PL" / "understats_database.db"
-
-# ── Fetch data ────────────────────────────────────────────────────────────────
-
-understat = UnderstatClient()
-
-team_data = understat.league(league="EPL").get_team_data(season="2025")
 
 # ── Transform ─────────────────────────────────────────────────────────────────
 
@@ -57,20 +41,25 @@ def team_to_df(team: dict) -> pd.DataFrame:
 def teams_to_df(teams: list[dict]) -> pd.DataFrame:
     return pd.concat([team_to_df(m) for m in teams], ignore_index=True)
 
-df = teams_to_df(list(team_data.values()))
 
-# ── Append new rows to DB (based on PK) ──────────────────────────────────────
+# ── Main function ─────────────────────────────────────────────────────────────
 
-con = sqlite3.connect(DB_PATH)
+def get_teams_stats(season: str = "2025"):
 
-existing_ids = pd.read_sql_query("SELECT id FROM teams_stats;", con)["id"].tolist()
+    understat = UnderstatClient()
+    team_data = understat.league(league="EPL").get_team_data(season=season)
 
-new_rows = df[~df["id"].isin(existing_ids)]
+    df = teams_to_df(list(team_data.values()))
 
-if new_rows.empty:
-    print("No new rows to insert")
-else:
-    new_rows.to_sql("teams_stats", con, if_exists="append", index=False)
-    print(f"{len(new_rows)} new rows inserted")
+    con = sqlite3.connect(DB_PATH)
+    existing_ids = pd.read_sql_query("SELECT id FROM teams_stats;", con)["id"].tolist()
+    new_rows = df[~df["id"].isin(existing_ids)]
+    if new_rows.empty:
+        print("No new rows to insert")
+    else:
+        new_rows.to_sql("teams_stats", con, if_exists="append", index=False)
+        print(f"{len(new_rows)} new rows inserted")
+    con.close()
 
-con.close()
+if __name__ == "__main__":
+    get_teams_stats()
