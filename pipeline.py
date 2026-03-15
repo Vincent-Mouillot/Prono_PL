@@ -7,6 +7,8 @@ from database.update_cloud_db import upload_db
 
 # Scrapers
 from scrapers.get_calendar import get_calendar
+from scrapers.get_players_stats import get_players_stats
+from scrapers.get_teams_stats import get_teams_stats
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 
@@ -33,6 +35,13 @@ def task_upload_db():
 def task_get_calendar():
     get_calendar()
 
+@task(name="Scrape teams tats", retries=2, retry_delay_seconds=30)
+def task_get_teams_stats():
+    get_teams_stats()
+
+@task(name="Scrape players stats", retries=2, retry_delay_seconds=30)
+def task_get_players_stats():
+    get_players_stats()
 
 
 # ── Subflows ──────────────────────────────────────────────────────────────────
@@ -51,6 +60,8 @@ def database_setup_flow():
 def scraping_flow():
     """Scrape all data sources — each task is independent and can be retried."""
     task_get_calendar()
+    task_get_players_stats()
+    task_get_teams_stats()
 
 @flow(name="Database upload flow")
 def database_upload_flow():
