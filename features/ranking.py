@@ -1,15 +1,6 @@
 import sqlite3
 import pandas as pd
-
-DB_NAME = "understats_database.db"
-
-con = sqlite3.connect(DB_NAME)
-
-calendar = pd.read_sql_query("SELECT * FROM games;", con)
-
-teams = pd.read_sql_query("SELECT * FROM teams_stats;", con)
-
-initial_rank = pd.read_sql_query("SELECT title, rank FROM initial_ranking WHERE season = (SELECT MAX(season) FROM initial_ranking);", con)
+from database.get_cloud_db import DB_PATH
 
 def add_last_ranking(df_calendar: pd.DataFrame, df_ranking: pd.DataFrame, col: str) -> pd.DataFrame:
     """
@@ -103,13 +94,23 @@ def compute_ranking(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, df_initia
 
     ranking = pd.concat([df_initial_rank, ranking])
 
-    df_calendar_ranked = add_last_ranking(add_last_ranking(calendar, ranking, "h_team"), ranking, "a_team")
+    df_calendar_ranked = add_last_ranking(add_last_ranking(df_calendar, ranking, "h_team"), ranking, "a_team")
 
     df_calendar_ranked["diff_rank_h"] = df_calendar_ranked["rank_a_team"] - df_calendar_ranked["rank_h_team"]
     df_calendar_ranked["diff_rank_a"] = df_calendar_ranked["rank_h_team"] - df_calendar_ranked["rank_a_team"]
 
     return df_calendar_ranked
 
-ranking = compute_ranking(teams, calendar, initial_rank)
+# ── Main function ─────────────────────────────────────────────────────────────
 
-print(ranking)
+def compute_ranking_feature():
+    """Compute the ranking feature and return the calendar with it."""
+    con = sqlite3.connect(DB_PATH)
+    calendar = pd.read_sql_query("SELECT * FROM games;", con)
+    teams = pd.read_sql_query("SELECT * FROM teams_stats;", con)
+    initial_rank = pd.read_sql_query("SELECT title, rank FROM initial_ranking WHERE season = (SELECT MAX(season) FROM initial_ranking);", con)
+
+    return compute_ranking(teams, calendar, initial_rank)
+
+if __name__ == "__main__":
+    compute_ranking_feature()
