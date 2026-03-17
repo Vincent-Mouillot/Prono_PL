@@ -12,6 +12,7 @@ from scrapers.get_teams_stats import get_teams_stats
 
 #Features
 from features.ranking import compute_ranking_feature
+from features.ewp import compute_ewp_feature
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 
@@ -53,6 +54,10 @@ def task_get_players_stats():
 def task_compute_ranking():
     return compute_ranking_feature()
 
+@task(name="Compute EWP difference", retries=2, retry_delay_seconds=30)
+def task_compute_ewp():
+    return compute_ewp_feature()
+
 
 # ── Subflows ──────────────────────────────────────────────────────────────────
 
@@ -81,6 +86,7 @@ def database_upload_flow():
 @flow(name="Compute features")
 def features_flow():
     df_calendrier = task_compute_ranking()
+    df_calendrier = task_compute_ewp(df_calendrier)
     return df_calendrier
 
 
@@ -92,6 +98,7 @@ def pipeline():
     scraping_flow()                 # scrape all data sources
     database_upload_flow()          # upload updated DB to Drive
     df_calendar = features_flow()   # compute ranking feature
+    print(df_calendar.head(20))
 
 
 if __name__ == "__main__":
