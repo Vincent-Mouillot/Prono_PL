@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 import numpy as np
-from database.get_cloud_db import DB_PATH
+from database import DB_PATH
 
 def compute_ewp(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window: str = "all"):
 
