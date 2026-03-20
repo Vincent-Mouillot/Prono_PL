@@ -1,18 +1,15 @@
 from prefect import flow, task
+import pandas as pd
+import sqlite3
 
 # Database
-from database.init_db import init_db
-from database.get_cloud_db import check_db_exists, download_db
-from database.update_cloud_db import upload_db
+from database import DB_PATH, init_db, check_db_exists, download_db, upload_db
 
 # Scrapers
-from scrapers.get_calendar import get_calendar
-from scrapers.get_players_stats import get_players_stats
-from scrapers.get_teams_stats import get_teams_stats
+from scrapers import get_calendar, get_players_stats, get_teams_stats
 
 #Features
-from features.ranking import compute_ranking_feature
-from features.ewp import compute_ewp_feature
+from features import compute_ewp_feature, compute_ranking_feature
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 
@@ -48,15 +45,25 @@ def task_get_players_stats():
     get_players_stats()
 
 
+# ── Load games ────────────────────────────────────────────────────────────────
+
+@task(name="Load games from DB")
+def task_load_games() -> pd.DataFrame:
+    con = sqlite3.connect(DB_PATH)
+    df = pd.read_sql_query("SELECT * FROM games;", con)
+    con.close()
+    return df
+
+
 # ── Features tasks ────────────────────────────────────────────────────────────
 
 @task(name="Compute Ranking difference", retries=2, retry_delay_seconds=30)
-def task_compute_ranking():
-    return compute_ranking_feature()
+def task_compute_ranking(df_calendar: pd.DataFrame):
+    return compute_ranking_feature(df_calendar)
 
 @task(name="Compute EWP difference", retries=2, retry_delay_seconds=30)
-def task_compute_ewp():
-    return compute_ewp_feature()
+def task_compute_ewp(df_calendar: pd.DataFrame):
+    return compute_ewp_feature(df_calendar)
 
 
 # ── Subflows ──────────────────────────────────────────────────────────────────
@@ -85,9 +92,10 @@ def database_upload_flow():
 
 @flow(name="Compute features")
 def features_flow():
-    df_calendrier = task_compute_ranking()
-    df_calendrier = task_compute_ewp(df_calendrier)
-    return df_calendrier
+    df_calendar = task_load_games()
+    df_calendar = task_compute_ranking(df_calendar)
+    df_calendar = task_compute_ewp(df_calendar)
+    return df_calendar
 
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────

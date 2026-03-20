@@ -6,6 +6,8 @@ from database import DB_PATH
 def compute_ewp(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window: str = "all"):
 
     df_teams = df_teams.sort_values(["id_team", "date"]).copy()
+    df_teams["date"] = pd.to_datetime(df_teams["date"])
+    df_calendar["datetime"] = pd.to_datetime(df_calendar["datetime"])
 
     if window == "all":
         npxG_for = df_teams.groupby("id_team")["npxG"].cumsum()
@@ -62,4 +64,7 @@ def compute_ewp_feature(df_calendar: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    compute_ewp_feature()
+    con = sqlite3.connect(DB_PATH)
+    calendar = pd.read_sql_query("SELECT * FROM games;", con)
+    con.close()
+    compute_ewp_feature(calendar)
