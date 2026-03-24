@@ -9,7 +9,7 @@ from database import DB_PATH, init_db, check_db_exists, download_db, upload_db
 from scrapers import get_calendar, get_players_stats, get_teams_stats
 
 #Features
-from features import compute_ewp_feature, compute_ranking_feature
+from features import compute_avg_goals_feature, compute_ewp_feature, compute_ranking_feature
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 
@@ -61,9 +61,13 @@ def task_load_games() -> pd.DataFrame:
 def task_compute_ranking(df_calendar: pd.DataFrame):
     return compute_ranking_feature(df_calendar)
 
-@task(name="Compute EWP difference", retries=2, retry_delay_seconds=30)
+@task(name="Compute EWP", retries=2, retry_delay_seconds=30)
 def task_compute_ewp(df_calendar: pd.DataFrame):
     return compute_ewp_feature(df_calendar)
+
+@task(name="Compute average goal", retries=2, retry_delay_seconds=30)
+def task_compute_avg_goals(df_calendar: pd.DataFrame):
+    return compute_avg_goals_feature(df_calendar)
 
 
 # ── Subflows ──────────────────────────────────────────────────────────────────
@@ -92,8 +96,10 @@ def database_upload_flow():
 
 @flow(name="Compute features")
 def features_flow():
+    """Load the games df and add the features"""
     df_calendar = task_load_games()
     df_calendar = task_compute_ranking(df_calendar)
+    df_calendar = task_compute_avg_goals(df_calendar)
     df_calendar = task_compute_ewp(df_calendar)
     return df_calendar
 
@@ -107,6 +113,7 @@ def pipeline():
     database_upload_flow()          # upload updated DB to Drive
     df_calendar = features_flow()   # compute ranking feature
     print(df_calendar.head(20))
+    print(df_calendar.columns)
 
 
 if __name__ == "__main__":
