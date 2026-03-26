@@ -11,6 +11,9 @@ from scrapers import get_calendar, get_players_stats, get_teams_stats
 #Features
 from features import compute_avg_goals_feature, compute_ewp_feature, compute_ranking_feature
 
+#ML
+from ml import preprocessing_function
+
 # ── Database tasks ────────────────────────────────────────────────────────────
 
 @task(name="Check DB exists on Google Drive")
@@ -70,6 +73,12 @@ def task_compute_avg_goals(df_calendar: pd.DataFrame):
     return compute_avg_goals_feature(df_calendar)
 
 
+# ── ML tasks ──────────────────────────────────────────────────────────────────
+
+@task(name="Preprocess data into long", retries=2, retry_delay_seconds=30)
+def task_preprocessing(df_calendar: pd.DataFrame):
+    return preprocessing_function(df_calendar)
+
 # ── Subflows ──────────────────────────────────────────────────────────────────
 
 @flow(name="Database setup flow")
@@ -103,6 +112,11 @@ def features_flow():
     df_calendar = task_compute_ewp(df_calendar)
     return df_calendar
 
+@flow(name="Train model")
+def training_flow(df_calendar):
+    """Train the model"""
+    df_long = task_preprocessing(df_calendar)
+    return df_long
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────
 
@@ -113,7 +127,10 @@ def pipeline():
     database_upload_flow()          # upload updated DB to Drive
     df_calendar = features_flow()   # compute ranking feature
     print(df_calendar.head(20))
-    print(df_calendar.columns)
+    df_calendar.to_csv("df_calendar.csv", index=False) # Temp output
+    df_preprocessed = training_flow(df_calendar)
+    print(df_preprocessed.head(20))
+    df_preprocessed.to_csv("df_preprocessed.csv", index=False) # Temp output
 
 
 if __name__ == "__main__":
