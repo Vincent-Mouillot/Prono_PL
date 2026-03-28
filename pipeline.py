@@ -1,6 +1,8 @@
 from prefect import flow, task
 import pandas as pd
 import sqlite3
+from datetime import datetime
+from typing import Optional
 
 # Database
 from database import DB_PATH, init_db, check_db_exists, download_db, upload_db
@@ -13,6 +15,16 @@ from features import compute_avg_goals_feature, compute_ewp_feature, compute_ran
 
 #ML
 from ml import preprocessing_function
+
+
+# ── Utils ─────────────────────────────────────────────────────────────────────
+
+def get_current_season() -> str:
+    """Returns current season — if before August, returns previous year."""
+    year = datetime.now().year
+    month = datetime.now().month
+    # La PL commence en août — si on est avant août c'est encore la saison précédente
+    return str(year) if month >= 8 else str(year - 1)
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 
@@ -36,16 +48,16 @@ def task_upload_db():
 # ── Scraping tasks ────────────────────────────────────────────────────────────
 
 @task(name="Scrape calendrier", retries=2, retry_delay_seconds=30)
-def task_get_calendar():
-    get_calendar()
+def task_get_calendar(season: str):
+    get_calendar(season)
 
 @task(name="Scrape teams tats", retries=2, retry_delay_seconds=30)
-def task_get_teams_stats():
-    get_teams_stats()
+def task_get_teams_stats(season: str):
+    get_teams_stats(season)
 
 @task(name="Scrape players stats", retries=2, retry_delay_seconds=30)
-def task_get_players_stats():
-    get_players_stats()
+def task_get_players_stats(season: str):
+    get_players_stats(season)
 
 
 # ── Load games ────────────────────────────────────────────────────────────────
@@ -61,8 +73,8 @@ def task_load_games() -> pd.DataFrame:
 # ── Features tasks ────────────────────────────────────────────────────────────
 
 @task(name="Compute Ranking difference", retries=2, retry_delay_seconds=30)
-def task_compute_ranking(df_calendar: pd.DataFrame):
-    return compute_ranking_feature(df_calendar)
+def task_compute_ranking(df_calendar: pd.DataFrame, season: str):
+    return compute_ranking_feature(df_calendar, season)
 
 @task(name="Compute EWP", retries=2, retry_delay_seconds=30)
 def task_compute_ewp(df_calendar: pd.DataFrame):
@@ -92,11 +104,11 @@ def database_setup_flow():
         task_init_db()
 
 @flow(name="Scraping flow")
-def scraping_flow():
+def scraping_flow(season: str):
     """Scrape all data sources — each task is independent and can be retried."""
-    task_get_calendar()
-    task_get_players_stats()
-    task_get_teams_stats()
+    task_get_calendar(season)
+    task_get_players_stats(season)
+    task_get_teams_stats(season)
 
 @flow(name="Database upload flow")
 def database_upload_flow():
@@ -104,16 +116,16 @@ def database_upload_flow():
     task_upload_db()
 
 @flow(name="Compute features")
-def features_flow():
+def features_flow(season):
     """Load the games df and add the features"""
     df_calendar = task_load_games()
-    df_calendar = task_compute_ranking(df_calendar)
+    df_calendar = task_compute_ranking(df_calendar, season)
     df_calendar = task_compute_avg_goals(df_calendar)
     df_calendar = task_compute_ewp(df_calendar)
     return df_calendar
 
 @flow(name="Train model")
-def training_flow(df_calendar):
+def training_flow(df_calendar: pd.DataFrame):
     """Train the model"""
     df_long = task_preprocessing(df_calendar)
     return df_long
@@ -121,17 +133,21 @@ def training_flow(df_calendar):
 # ── Main pipeline ─────────────────────────────────────────────────────────────
 
 @flow(name="Prono PL pipeline")
-def pipeline():
+def pipeline(season: Optional[str] = None):
+    if season is None:
+        season = get_current_season()
+    print(f"Running pipeline for season {season}")
     database_setup_flow()           # download or init DB
-    scraping_flow()                 # scrape all data sources
+    scraping_flow(season)                 # scrape all data sources
     database_upload_flow()          # upload updated DB to Drive
-    df_calendar = features_flow()   # compute ranking feature
-    print(df_calendar.head(20))
+    df_calendar = features_flow(season)   # compute ranking feature
     df_calendar.to_csv("df_calendar.csv", index=False) # Temp output
     df_preprocessed = training_flow(df_calendar)
-    print(df_preprocessed.head(20))
     df_preprocessed.to_csv("df_preprocessed.csv", index=False) # Temp output
 
 
 if __name__ == "__main__":
     pipeline()
+    # To get the historical data
+    for season in ["2024", "2023", "2022", "2021"]:
+        pipeline(season=season)

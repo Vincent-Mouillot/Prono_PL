@@ -37,7 +37,7 @@ def matches_to_df(matches: list[dict]) -> pd.DataFrame:
 # ── Main function ─────────────────────────────────────────────────────────────
 
 def get_calendar(season: str = "2025"):
-    """Fetch EPL calendar from Understat and write it to the games table."""
+    """Fetch EPL calendar from Understat and merge it into the games table."""
 
     understat = UnderstatClient()
     match_data = understat.league(league="EPL").get_match_data(season=season)
@@ -45,8 +45,49 @@ def get_calendar(season: str = "2025"):
     df = matches_to_df(match_data)
 
     con = sqlite3.connect(DB_PATH)
-    df.to_sql("games", con, if_exists="replace", index=False)
-    print(f"{len(df)} rows written to games table")
+
+    try:
+        existing_df = pd.read_sql_query("SELECT * FROM games;", con)
+    except Exception:
+        # Table does not exist yet
+        df.to_sql("games", con, if_exists="replace", index=False)
+        print(f"{len(df)} rows written to new games table")
+        con.close()
+        return
+
+    # Identifier les nouvelles lignes
+    new_rows = df[~df["id"].isin(existing_df["id"])]
+
+    # Identifier les lignes existantes à mettre à jour
+    merged = df.merge(existing_df, on="id", how="inner", suffixes=("", "_old"))
+
+    # Détecter les changements
+    cols_to_compare = [col for col in df.columns if col != "id"]
+    updated_rows = merged[
+        (merged[cols_to_compare] != merged[[f"{col}_old" for col in cols_to_compare]].values).any(axis=1)
+    ][df.columns]
+
+    # Insert nouvelles lignes
+    if not new_rows.empty:
+        new_rows.to_sql("games", con, if_exists="append", index=False)
+
+    # Update lignes existantes modifiées
+    if not updated_rows.empty:
+        cursor = con.cursor()
+        for _, row in updated_rows.iterrows():
+            set_clause = ", ".join([f"{col} = ?" for col in cols_to_compare])
+            values = [row[col] for col in cols_to_compare]
+            values.append(row["id"])
+
+            cursor.execute(
+                f"UPDATE games SET {set_clause} WHERE id = ?",
+                values
+            )
+        con.commit()
+
+    print(f"{len(new_rows)} new rows inserted")
+    print(f"{len(updated_rows)} rows updated")
+
     con.close()
 
 

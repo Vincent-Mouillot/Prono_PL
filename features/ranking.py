@@ -103,11 +103,15 @@ def compute_ranking(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, df_initia
 
 # ── Main function ─────────────────────────────────────────────────────────────
 
-def compute_ranking_feature(df_calendar: pd.DataFrame):
+def compute_ranking_feature(df_calendar: pd.DataFrame, season: str):
     """Compute the ranking feature and return the calendar with it."""
     con = sqlite3.connect(DB_PATH)
     teams = pd.read_sql_query("SELECT * FROM teams_stats;", con)
-    initial_rank = pd.read_sql_query("SELECT title, rank FROM initial_ranking WHERE season = (SELECT MAX(season) FROM initial_ranking);", con)
+    initial_rank = pd.read_sql_query(
+        "SELECT title, rank FROM initial_ranking WHERE season = ?;",
+        con,
+        params=(season,)
+    )
     con.close()
 
     return compute_ranking(teams, df_calendar, initial_rank)
