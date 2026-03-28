@@ -1,6 +1,5 @@
 import sqlite3
 import pandas as pd
-from pathlib import Path
 from database.initial_ranking import insert_initial_ranking, ALL_SEASONS
 from database.get_cloud_db import DB_PATH
 
@@ -17,6 +16,8 @@ def init_db():
     cur.executescript("""
     CREATE TABLE IF NOT EXISTS teams_stats (
         id                TEXT PRIMARY KEY,
+        season            INTEGER,
+        date              TEXT,
         id_team           TEXT,
         title             TEXT,
         h_a               TEXT,
@@ -34,7 +35,6 @@ def init_db():
         missed            INTEGER,
         xpts              REAL,
         result            TEXT,
-        date              TEXT,
         wins              INTEGER,
         draws             INTEGER,
         loses             INTEGER,

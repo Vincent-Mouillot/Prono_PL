@@ -2,6 +2,7 @@ import sqlite3
 import pandas as pd
 from database.get_cloud_db import DB_PATH
 
+
 def add_last_ranking(df_calendar: pd.DataFrame, df_ranking: pd.DataFrame, col: str) -> pd.DataFrame:
     """
     Merge the last known ranking onto the calendar for a given team column.
@@ -28,14 +29,15 @@ def add_last_ranking(df_calendar: pd.DataFrame, df_ranking: pd.DataFrame, col: s
 
     result = pd.merge_asof(
         calendar,
-        ranking.rename(columns={"title": col, "datetime": "datetime", "rank": f"rank_{col}"}),
+        ranking.rename(columns={"title": col, "rank": f"rank_{col}"}),
         on="datetime",
         by=col,
-        direction="backward",  # last known ranking strictly before match
+        direction="backward",
         allow_exact_matches=False
     )
 
     return result
+
 
 def compute_ranking(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, df_initial_rank: pd.DataFrame) -> pd.DataFrame:
     """
@@ -44,12 +46,12 @@ def compute_ranking(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, df_initia
     For the first game of a season use a df with hard coded rank.
 
     Args:
-        df_teams:  teams stats with a 'date', 'matchday', 'results, 'scored', 'missed' column
-        df_calendar: games dataframe with a 'datetime' column
+        df_teams:        teams stats filtered by season
+        df_calendar:     games dataframe filtered by season
         df_initial_rank: the initial rank of the season (last rank of the previous season)
 
     Returns:
-        df_calendar with an added 'rank_{col}' column
+        df_calendar with added ranking columns
     """
     played = df_teams.dropna(subset=["result"]).copy()
     played["datetime"] = pd.to_datetime(played["date"])
@@ -68,7 +70,6 @@ def compute_ranking(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, df_initia
     snapshots = []
 
     for d in all_dates:
-        # Last known row per team up to date d
         snapshot = (
             played[played["date"] <= d]
             .sort_values("date")
@@ -84,40 +85,63 @@ def compute_ranking(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, df_initia
         snapshot["snapshot_date"] = d
         snapshots.append(snapshot[["snapshot_date", "datetime", "id_team", "title", "matchday",
                                    "cumulative_points", "cumulative_goal_difference", "rank"]])
-        
+
     ranking = pd.concat(snapshots, ignore_index=True)
 
-    # First the game of every team we add the initial rank of last season
-    # For this we add the first date of the calendar for each initial rank
+    # For the first game of every team, add the initial rank of the previous season
     df_initial_rank["snapshot_date"] = min(all_dates)
     df_initial_rank["datetime"] = pd.to_datetime(df_initial_rank["snapshot_date"])
 
     ranking = pd.concat([df_initial_rank, ranking])
 
-    df_calendar_ranked = add_last_ranking(add_last_ranking(df_calendar, ranking, "h_team"), ranking, "a_team")
+    df_calendar_ranked = add_last_ranking(
+        add_last_ranking(df_calendar, ranking, "h_team"),
+        ranking,
+        "a_team"
+    )
 
     df_calendar_ranked["diff_rank_h"] = df_calendar_ranked["rank_a_team"] - df_calendar_ranked["rank_h_team"]
     df_calendar_ranked["diff_rank_a"] = df_calendar_ranked["rank_h_team"] - df_calendar_ranked["rank_a_team"]
 
     return df_calendar_ranked
 
+
 # ── Main function ─────────────────────────────────────────────────────────────
 
-def compute_ranking_feature(df_calendar: pd.DataFrame, season: str):
-    """Compute the ranking feature and return the calendar with it."""
+def compute_ranking_feature(df_calendar: pd.DataFrame, season: str) -> pd.DataFrame:
+    """Compute the ranking feature for a given season and return the enriched calendar."""
+
     con = sqlite3.connect(DB_PATH)
-    teams = pd.read_sql_query("SELECT * FROM teams_stats;", con)
+
+    # Filter teams_stats by season to avoid mixing seasons
+    teams = pd.read_sql_query(
+        "SELECT * FROM teams_stats WHERE season = ?;",
+        con,
+        params=(int(season),)
+    )
     initial_rank = pd.read_sql_query(
         "SELECT title, rank FROM initial_ranking WHERE season = ?;",
         con,
-        params=(season,)
+        params=(int(season),)
     )
+
     con.close()
 
-    return compute_ranking(teams, df_calendar, initial_rank)
+    # Filter calendar by season to avoid mixing seasons
+    df_calendar = df_calendar.copy()
+    df_calendar["datetime"] = pd.to_datetime(df_calendar["datetime"])
+    year = int(season)
+    df_season = df_calendar[
+        ((df_calendar["datetime"].dt.month >= 8) & (df_calendar["datetime"].dt.year == year)) |
+        ((df_calendar["datetime"].dt.month < 8) & (df_calendar["datetime"].dt.year == year + 1))
+    ].copy()
+
+    return compute_ranking(teams, df_season, initial_rank)
+
 
 if __name__ == "__main__":
     con = sqlite3.connect(DB_PATH)
     calendar = pd.read_sql_query("SELECT * FROM games;", con)
     con.close()
-    compute_ranking_feature(calendar)
+    result = compute_ranking_feature(calendar, season="2025")
+    print(result[["datetime", "h_team", "a_team", "rank_h_team", "rank_a_team", "diff_rank_h"]].head(10))
