@@ -12,19 +12,17 @@ def neutralize_col(col):
 # Features
 
 team_features = {
-    'ranking'  : ['rank_team', 'diff_rank'],
+    'ranking'  : ['diff_rank'],
     'goals'    : ['avg_G_for_saison', 'avg_G_against_saison',
-                  'avg_G_for_window', 'avg_G_against_window',
-                  'avg_G_for_match',  'avg_G_against_match'],
-    'ewp'      : ['ewp_saison', 'ewp_window', 'ewp_match'],
+                  'avg_G_for_window', 'avg_G_against_window'],
+    'ewp'      : ['ewp_saison', 'ewp_window'],
     'target'   : ['xg'],
 }
 
 opp_features = {
-    'ewp'   : ['ewp_saison', 'ewp_window', 'ewp_match'],
+    'ewp'   : ['ewp_saison', 'ewp_window'],
     'goals' : ['avg_G_for_saison', 'avg_G_against_saison',
-               'avg_G_for_window', 'avg_G_against_window',
-               'avg_G_for_match',  'avg_G_against_match'],
+               'avg_G_for_window', 'avg_G_against_window'],
 }
 
 # Flatten to use in function
