@@ -10,8 +10,8 @@ def compute_avg_goals(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window:
     df_calendar["datetime"] = pd.to_datetime(df_calendar["datetime"])
 
     if window == "all":
-        avg_G_for = df_teams.groupby("id_team")["scored"].cumsum() / df_teams.groupby("id_team")["scored"].cumcount()
-        avg_G_against = df_teams.groupby("id_team")["missed"].cumsum() / df_teams.groupby("id_team")["scored"].cumcount()
+        avg_G_for = df_teams.groupby("id_team")["scored"].cumsum() / (df_teams.groupby("id_team")["scored"].cumcount() + 1)
+        avg_G_against = df_teams.groupby("id_team")["missed"].cumsum() / (df_teams.groupby("id_team")["missed"].cumcount() + 1)
     else:
         int_window = int(window)
         avg_G_for = df_teams.groupby("id_team")["scored"].transform(
