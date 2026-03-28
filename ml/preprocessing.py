@@ -22,7 +22,9 @@ team_features = {
 
 opp_features = {
     'ewp'   : ['ewp_saison', 'ewp_window', 'ewp_match'],
-    'goals' : ['avg_G_for_saison', 'avg_G_against_saison'],
+    'goals' : ['avg_G_for_saison', 'avg_G_against_saison',
+               'avg_G_for_window', 'avg_G_against_window',
+               'avg_G_for_match',  'avg_G_against_match'],
 }
 
 # Flatten to use in function
