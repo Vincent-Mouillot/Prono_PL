@@ -1,7 +1,6 @@
 from prefect import flow, task
 import pandas as pd
 import sqlite3
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -17,15 +16,8 @@ from features import compute_avg_goals_feature, compute_ewp_feature, compute_ran
 # ML
 from ml import preprocessing_function
 
-
-# ── Utils ─────────────────────────────────────────────────────────────────────
-
-def get_current_season() -> str:
-    """Returns current season — if before August, returns previous year."""
-    year = datetime.now().year
-    month = datetime.now().month
-    return str(year) if month >= 8 else str(year - 1)
-
+# Utils
+from utils import get_current_season
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 
