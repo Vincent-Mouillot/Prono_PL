@@ -1,5 +1,4 @@
 import os
-import io
 from pathlib import Path
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
@@ -12,18 +11,10 @@ load_dotenv()
 PERSONAL_EMAIL = os.environ.get("PERSONAL_EMAIL")
 DRIVE_FOLDER_ID = os.environ.get("DRIVE_FOLDER_ID")
 
-if os.name == "nt":  # Windows
-    service_account_root = "C:/Users/vmoui/Documents/api_keys/"
-else:
-    service_account_root = "/home/vmouillot/Documents/api_keys/"
-
-service_account_json = next(
-    (os.path.join(service_account_root, f) for f in os.listdir(service_account_root) if f.endswith(".json")),
-    None
-)
+service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
 
 if not service_account_json:
-    raise FileNotFoundError(f"No JSON file found in {service_account_root}")
+    raise FileNotFoundError("SERVICE_ACCOUNT_JSON environment variable not set")
 
 # drive_service instantiated once at module load — reused by all functions
 credentials = Credentials.from_service_account_file(service_account_json)
