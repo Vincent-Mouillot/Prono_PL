@@ -3,6 +3,8 @@ import mlflow
 import mlflow.sklearn
 from pathlib import Path
 
+from utils import match_selection
+
 MLFLOW_TRACKING_URI = "sqlite:///" + str(Path(__file__).resolve().parent.parent / "mlflow.db")
 
 def load_model():
@@ -22,3 +24,8 @@ def predictions(df: pd.DataFrame) -> pd.DataFrame:
     today_matches = today_matches.copy()
     today_matches["xg_predicted"] = model.predict(X)
     return today_matches
+
+if __name__ == "__main__":
+    df = pd.read_csv("outputs/df_preprocessed.csv")
+    df = match_selection(df, nb_days=7)
+    predictions(df)
