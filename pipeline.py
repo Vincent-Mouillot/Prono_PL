@@ -14,10 +14,10 @@ from scrapers import get_calendar, get_players_stats, get_teams_stats
 from features import compute_avg_goals_feature, compute_ewp_feature, compute_ranking_feature
 
 # ML
-from ml import preprocessing_function, train, match_selection, predictions
+from ml import preprocessing_function, train, predictions
 
 # Utils
-from utils import get_current_season
+from utils import get_current_season, match_selection
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 

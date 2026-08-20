@@ -1,15 +1,9 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn
-from datetime import date
 from pathlib import Path
 
 MLFLOW_TRACKING_URI = "sqlite:///" + str(Path(__file__).resolve().parent.parent / "mlflow.db")
-
-def match_selection(df: pd.DataFrame):
-    df_coming = df.loc[df["xg"].isnull()].sort_values("datetime").reset_index(drop=True)
-    today = pd.Timestamp(date.today())
-    return df_coming.loc[pd.to_datetime(df_coming["datetime"]).dt.date == today.date()]
 
 def load_model():
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
