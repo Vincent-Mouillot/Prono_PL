@@ -61,3 +61,6 @@ table_output.txt
 __pycache__/
 *.pyc
 *.pyo
+
+# MLFlow runs
+mlruns/

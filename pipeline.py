@@ -14,7 +14,7 @@ from scrapers import get_calendar, get_players_stats, get_teams_stats
 from features import compute_avg_goals_feature, compute_ewp_feature, compute_ranking_feature
 
 # ML
-from ml import preprocessing_function
+from ml import preprocessing_function, train, match_selection, predictions
 
 # Utils
 from utils import get_current_season
@@ -100,6 +100,14 @@ def task_compute_avg_goals(df: pd.DataFrame) -> pd.DataFrame:
 def task_preprocessing(df: pd.DataFrame) -> pd.DataFrame:
     return preprocessing_function(df)
 
+@task(name="Select today matches", retries=2, retry_delay_seconds=30)
+def task_match_selection(df: pd.DataFrame) -> pd.DataFrame:
+    return match_selection(df)
+
+@task(name="Predict today matches", retries=2, retry_delay_seconds=30)
+def task_predictions(df: pd.DataFrame) -> pd.DataFrame:
+    return predictions(df)
+
 
 # ── Subflows ──────────────────────────────────────────────────────────────────
 
@@ -146,33 +154,26 @@ def features_flow():
 
 @flow(name="Training flow")
 def training_flow():
-    """Load features from DB and preprocess into long format."""
+    """Load features from DB, preprocess into long format, then train the model."""
     df = task_load_features()
     df_long = task_preprocessing(df)
 
     Path("outputs").mkdir(exist_ok=True)
     df_long.to_csv("outputs/df_preprocessed.csv", index=False)
+
+    train(df_long)
     return df_long
 
+@flow(name="Predictions")
+def prediction_flow(df: pd.DataFrame):
+    """Select today matches and if exists predict xG"""
+    
+    if task_match_selection(df).empty:
+        print("No match today")
+    else:
+        task_predictions(df)
 
 # ── Pipelines ─────────────────────────────────────────────────────────────────
-
-@flow(name="Feature pipeline")
-def pipeline(season: Optional[str] = None):
-    """Scrape data for a single season and upload DB."""
-    if season is None:
-        season = get_current_season()
-    print(f"Running scraping pipeline for season {season}")
-
-    database_setup_flow()
-    scraping_flow(season)
-    database_upload_flow()
-
-@flow(name="ML pipeline")
-def ml_pipeline():
-    """Compute features on all seasons, then preprocess and train."""
-    features_flow()
-    training_flow()
 
 @flow(name="Prono PL full pipeline")
 def full_pipeline(seasons: Optional[list] = None):
@@ -180,17 +181,29 @@ def full_pipeline(seasons: Optional[list] = None):
     if seasons is None:
         seasons = [get_current_season()]
 
-    # 1. Scrape saison par saison
-    for season in seasons:
-        pipeline(season=season)
+    # 1. Setup DB once
+    database_setup_flow()
 
-    # 2. Features + training sur toutes les saisons combinées
-    ml_pipeline()
+    # 2. Scrape season per season
+    for season in seasons:
+        scraping_flow(season)
+
+    # 3. Features on all seasons
+    features_flow()
+
+    # 4. Upload DB once (scrap data and features)
+    database_upload_flow()
+
+    # 5. Preprocessing + training model
+    training_flow()
+
+    # 6. Predictions
+    prediction_flow()
 
 
 if __name__ == "__main__":
-    # Premier run historique
+    # First run
     full_pipeline(seasons=["2021", "2022", "2023", "2024", "2025"])
 
-    # Run quotidien automatique
+    # Run daily
     # full_pipeline()
