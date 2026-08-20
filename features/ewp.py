@@ -10,9 +10,12 @@ def compute_ewp(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window: str =
     df_calendar["datetime"] = pd.to_datetime(df_calendar["datetime"])
 
     if window == "all":
-        npxG_for = df_teams.groupby("id_team")["npxG"].cumsum()
-        npxG_against = df_teams.groupby("id_team")["npxGA"].cumsum()
+        # Cumul remis à zéro à chaque saison (0.5 au 1er match de la saison)
+        group_key = ["id_team", "season"]
+        npxG_for = df_teams.groupby(group_key)["npxG"].cumsum()
+        npxG_against = df_teams.groupby(group_key)["npxGA"].cumsum()
     else:
+        group_key = ["id_team"]
         int_window = int(window)
         npxG_for = df_teams.groupby("id_team")["npxG"].transform(
             lambda x: x.rolling(int_window, min_periods=1).sum()
@@ -21,9 +24,9 @@ def compute_ewp(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window: str =
             lambda x: x.rolling(int_window, min_periods=1).sum()
         )
 
-    # Décalage d'un match en arrière par équipe → valeur du match précédent
-    df_teams["npxG_for"] = npxG_for.groupby(df_teams["id_team"]).shift(1)
-    df_teams["npxG_against"] = npxG_against.groupby(df_teams["id_team"]).shift(1)
+    # Décalage d'un match en arrière (même groupe) → valeur du match précédent
+    df_teams["npxG_for"] = npxG_for.groupby([df_teams[k] for k in group_key]).shift(1)
+    df_teams["npxG_against"] = npxG_against.groupby([df_teams[k] for k in group_key]).shift(1)
 
     denom = df_teams["npxG_for"] ** 2 + df_teams["npxG_against"] ** 2
     df_teams["ewp"] = np.where(denom == 0, 0.5, df_teams["npxG_for"] ** 2 / denom)
