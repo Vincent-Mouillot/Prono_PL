@@ -14,7 +14,7 @@ from scrapers import get_calendar, get_players_stats, get_teams_stats
 from features import compute_avg_goals_feature, compute_ewp_feature, compute_ranking_feature
 
 # ML
-from ml import preprocessing_function, train, predictions
+from ml import preprocessing_function, train, predictions, fit_rho, score_matrices
 
 # Utils
 from utils import get_current_season, match_selection
@@ -108,6 +108,14 @@ def task_match_selection(df: pd.DataFrame) -> pd.DataFrame:
 def task_predictions(df: pd.DataFrame) -> pd.DataFrame:
     return predictions(df)
 
+@task(name="Predict rho estimator for Dixon Coles model", retries=2, retry_delay_seconds=30)
+def task_rho_estimator(df: pd.DataFrame) -> pd.DataFrame:
+    return fit_rho(df)
+
+@task(name="Build score matrices", retries=2, retry_delay_seconds=30)
+def task_score_matrices(df: pd.DataFrame, rho: float, max_goals: int = 6) -> pd.DataFrame:
+    return score_matrices(df, rho)
+
 
 # ── Subflows ──────────────────────────────────────────────────────────────────
 
@@ -172,6 +180,9 @@ def prediction_flow(df: pd.DataFrame):
         print("No match today")
     else:
         task_predictions(df)
+        rho = task_rho_estimator(task_load_games)
+        df = task_score_matrices(df, rho)
+         
 
 # ── Pipelines ─────────────────────────────────────────────────────────────────
 
@@ -195,10 +206,10 @@ def full_pipeline(seasons: Optional[list] = None):
     database_upload_flow()
 
     # 5. Preprocessing + training model
-    training_flow()
+    df_long = training_flow()
 
     # 6. Predictions
-    prediction_flow()
+    df_predictions = prediction_flow(df_long)
 
 
 if __name__ == "__main__":
