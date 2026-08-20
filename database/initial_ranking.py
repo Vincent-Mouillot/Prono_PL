@@ -18,6 +18,31 @@ def insert_initial_ranking(con: sqlite3.Connection, df: pd.DataFrame, season: st
 # Team names match Understat naming convention
 
 ALL_SEASONS = {
+    # 2026-27 promoted: Coventry City, Ipswich, Hull City
+    # 2025-26 final standings used as initial ranking
+    2026: pd.DataFrame([
+        {"season": 2026, "title": "Arsenal",                 "rank": 1},
+        {"season": 2026, "title": "Manchester City",         "rank": 2},
+        {"season": 2026, "title": "Manchester United",       "rank": 3},
+        {"season": 2026, "title": "Aston Villa",             "rank": 4},
+        {"season": 2026, "title": "Liverpool",               "rank": 5},
+        {"season": 2026, "title": "Bournemouth",             "rank": 6},
+        {"season": 2026, "title": "Sunderland",              "rank": 7},
+        {"season": 2026, "title": "Brighton",                "rank": 8},
+        {"season": 2026, "title": "Brentford",               "rank": 9},
+        {"season": 2026, "title": "Chelsea",                 "rank": 10},
+        {"season": 2026, "title": "Fulham",                  "rank": 11},
+        {"season": 2026, "title": "Newcastle United",        "rank": 12},
+        {"season": 2026, "title": "Everton",                 "rank": 13},
+        {"season": 2026, "title": "Leeds",                   "rank": 14},
+        {"season": 2026, "title": "Crystal Palace",          "rank": 15},
+        {"season": 2026, "title": "Nottingham Forest",       "rank": 16},
+        {"season": 2026, "title": "Tottenham",               "rank": 17},
+        {"season": 2026, "title": "Coventry City",           "rank": 18},  # promoted
+        {"season": 2026, "title": "Ipswich",                 "rank": 19},  # promoted
+        {"season": 2026, "title": "Hull City",               "rank": 20},  # promoted
+    ]),
+
     # 2024-25 promoted: Leeds, Burnley, Sunderland
     # 2023-24 final standings used as initial ranking
     2025: pd.DataFrame([
