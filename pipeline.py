@@ -11,7 +11,7 @@ from database import DB_PATH, init_db, check_db_exists, download_db, upload_db
 from scrapers import get_calendar, get_players_stats, get_teams_stats
 
 # Features
-from features import compute_avg_goals_feature, compute_ewp_feature, compute_ranking_feature, compute_team_power_feature
+from features import compute_ewp_feature, compute_ranking_feature, compute_team_power_feature
 
 # ML
 from ml import preprocessing_function, train, predictions, fit_rho, score_matrices
@@ -89,10 +89,6 @@ def task_compute_ranking(df_calendar: pd.DataFrame, season: str) -> pd.DataFrame
 def task_compute_ewp(df: pd.DataFrame) -> pd.DataFrame:
     return compute_ewp_feature(df)
 
-@task(name="Compute average goals", retries=2, retry_delay_seconds=30)
-def task_compute_avg_goals(df: pd.DataFrame) -> pd.DataFrame:
-    return compute_avg_goals_feature(df)
-
 @task(name="Compute offensive and defensive team power", retries=2, retry_delay_seconds=30)
 def task_compute_team_power(df: pd.DataFrame) -> pd.DataFrame:
     return compute_team_power_feature(df)
@@ -154,7 +150,6 @@ def features_flow():
         task_compute_ranking(df_games, str(season)) for season in seasons
     ], ignore_index=True)
 
-    df_all = task_compute_avg_goals(df_all)
     df_all = task_compute_ewp(df_all)
     df_all = task_compute_team_power(df_all)
 

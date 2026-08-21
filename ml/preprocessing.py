@@ -13,8 +13,6 @@ def neutralize_col(col):
 
 team_features = {
     'ranking'  : ['diff_rank'],
-    'goals'    : ['avg_G_for_saison', 'avg_G_against_saison',
-                  'avg_G_for_window', 'avg_G_against_window'],
     'ewp'      : ['ewp_saison', 'ewp_window'],
     'power'    : ['off_power', 'def_power'],
     'target'   : ['xg'],
@@ -22,8 +20,6 @@ team_features = {
 
 opp_features = {
     'ewp'   : ['ewp_saison', 'ewp_window'],
-    'goals' : ['avg_G_for_saison', 'avg_G_against_saison',
-               'avg_G_for_window', 'avg_G_against_window'],
     'power' : ['off_power', 'def_power'],
 }
 
