@@ -16,6 +16,7 @@ team_features = {
     'goals'    : ['avg_G_for_saison', 'avg_G_against_saison',
                   'avg_G_for_window', 'avg_G_against_window'],
     'ewp'      : ['ewp_saison', 'ewp_window'],
+    'power'    : ['off_power', 'def_power'],
     'target'   : ['xg'],
 }
 
@@ -23,6 +24,7 @@ opp_features = {
     'ewp'   : ['ewp_saison', 'ewp_window'],
     'goals' : ['avg_G_for_saison', 'avg_G_against_saison',
                'avg_G_for_window', 'avg_G_against_window'],
+    'power' : ['off_power', 'def_power'],
 }
 
 # Flatten to use in function

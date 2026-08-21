@@ -1,3 +1,4 @@
 from features.ewp import compute_ewp_feature
 from features.ranking import compute_ranking_feature
 from features.avg_goals import compute_avg_goals_feature
+from features.team_power import compute_team_power_feature
