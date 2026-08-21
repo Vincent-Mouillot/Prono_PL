@@ -64,3 +64,6 @@ __pycache__/
 
 # MLFlow runs
 mlruns/
+
+# CSV files
+*.csv
