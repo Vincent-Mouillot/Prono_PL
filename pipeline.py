@@ -14,10 +14,12 @@ from scrapers import get_calendar, get_players_stats, get_teams_stats
 from features import compute_ewp_feature, compute_ranking_feature, compute_team_power_feature
 
 # ML
-from ml import preprocessing_function, train, predictions, fit_rho, score_matrices
+from ml import preprocessing_function, train, predictions, fit_rho, score_matrices, days_since_last_training
 
 # Utils
 from utils import get_current_season, match_selection
+
+TRAINING_INTERVAL_DAYS = 30
 
 # ── Database tasks ────────────────────────────────────────────────────────────
 
@@ -115,6 +117,10 @@ def task_rho_estimator(df: pd.DataFrame) -> pd.DataFrame:
 def task_score_matrices(df: pd.DataFrame, rho: float, max_goals: int = 6) -> pd.DataFrame:
     return score_matrices(df, rho)
 
+@task(name="Check days since last training")
+def task_days_since_last_training() -> Optional[int]:
+    return days_since_last_training()
+
 
 # ── Subflows ──────────────────────────────────────────────────────────────────
 
@@ -160,15 +166,21 @@ def features_flow():
     con.close()
 
 @flow(name="Training flow")
-def training_flow():
-    """Load features from DB, preprocess into long format, then train the model."""
+def training_flow(force_train: bool = False):
+    """Load features from DB, preprocess into long format, then (re)train the model
+    if it hasn't been trained in the last TRAINING_INTERVAL_DAYS days (or always, if force_train)."""
     df = task_load_features()
     df_long = task_preprocessing(df)
 
     Path("outputs").mkdir(exist_ok=True)
     df_long.to_csv("outputs/df_preprocessed.csv", index=False)
 
-    train(df_long)
+    days_since = task_days_since_last_training()
+    if force_train or days_since is None or days_since >= TRAINING_INTERVAL_DAYS:
+        train(df_long)
+    else:
+        print(f"Model trained {days_since} day(s) ago (< {TRAINING_INTERVAL_DAYS}) — skipping retraining")
+
     return df_long
 
 @flow(name="Predictions")
@@ -186,7 +198,7 @@ def prediction_flow(df: pd.DataFrame):
 # ── Pipelines ─────────────────────────────────────────────────────────────────
 
 @flow(name="Prono PL full pipeline")
-def full_pipeline(seasons: Optional[list] = None):
+def full_pipeline(seasons: Optional[list] = None, force_train: bool = False):
     """Full pipeline — scrape per season, then features + training on all."""
     if seasons is None:
         seasons = [get_current_season()]
@@ -205,7 +217,7 @@ def full_pipeline(seasons: Optional[list] = None):
     database_upload_flow()
 
     # 5. Preprocessing + training model
-    df_long = training_flow()
+    df_long = training_flow(force_train=force_train)
 
     # 6. Predictions
     df_predictions = prediction_flow(df_long)
@@ -213,7 +225,8 @@ def full_pipeline(seasons: Optional[list] = None):
 
 if __name__ == "__main__":
     # First run
-    full_pipeline(seasons=["2021", "2022", "2023", "2024", "2025"])
+    full_pipeline(seasons=["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"], 
+                  force_train=True)
 
     # Run daily
     # full_pipeline()

@@ -7,12 +7,30 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import RFECV
 from sklearn.metrics import mean_squared_error
 from pathlib import Path
+from datetime import datetime, date
 
 from utils import get_season_from_date
 
 MLFLOW_TRACKING_URI = "sqlite:///" + str(Path(__file__).resolve().parent.parent / "mlflow.db")
+MLFLOW_EXPERIMENT_NAME = "Prono_PL"
 
 RF_PARAMS = {"n_estimators": 100, "max_depth": 5, "random_state": 42}
+
+
+def days_since_last_training():
+    """Days since the last MLflow training run, or None if no run exists yet."""
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    client = mlflow.tracking.MlflowClient()
+    experiment = client.get_experiment_by_name(MLFLOW_EXPERIMENT_NAME)
+    if experiment is None:
+        return None
+
+    runs = client.search_runs(experiment.experiment_id, order_by=["start_time DESC"], max_results=1)
+    if not runs:
+        return None
+
+    last_run_date = datetime.fromtimestamp(runs[0].info.start_time / 1000).date()
+    return (date.today() - last_run_date).days
 
 
 def _prepare_training_data(df: pd.DataFrame):
@@ -69,7 +87,7 @@ def select_features(df: pd.DataFrame, min_features: int = 1) -> list:
 
 def train(df: pd.DataFrame):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-    mlflow.set_experiment("Prono_PL")
+    mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
     X, y, seasons, cv_splits = _prepare_training_data(df)
 
