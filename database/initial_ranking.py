@@ -40,7 +40,7 @@ ALL_SEASONS = {
         {"season": 2026, "title": "Tottenham",               "rank": 17},
         {"season": 2026, "title": "Coventry City",           "rank": 18},  # promoted
         {"season": 2026, "title": "Ipswich",                 "rank": 19},  # promoted
-        {"season": 2026, "title": "Hull City",               "rank": 20},  # promoted
+        {"season": 2026, "title": "Hull",                    "rank": 20},  # promoted
     ]),
 
     # 2024-25 promoted: Leeds, Burnley, Sunderland
