@@ -186,13 +186,15 @@ def training_flow(force_train: bool = False):
 @flow(name="Predictions")
 def prediction_flow(df: pd.DataFrame):
     """Select today matches and if exists predict xG"""
-    
-    if task_match_selection(df).empty:
+    df_selected = task_match_selection(df)
+    if df_selected.empty:
         print("No match today")
     else:
-        task_predictions(df)
-        rho = task_rho_estimator(task_load_games)
-        df = task_score_matrices(df, rho)
+        df_predicted = task_predictions(df_selected)
+        df_games = task_load_games()
+        rho = task_rho_estimator(df_games)
+        df_predicted = task_score_matrices(df_predicted, rho)
+        return df_predicted
          
 
 # ── Pipelines ─────────────────────────────────────────────────────────────────
