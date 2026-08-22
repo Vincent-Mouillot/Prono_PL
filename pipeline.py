@@ -17,7 +17,7 @@ from features import compute_ewp_feature, compute_ranking_feature, compute_team_
 from ml import preprocessing_function, train, predictions, fit_rho, score_matrices, days_since_last_training
 
 # Utils
-from utils import get_current_season, get_season_from_date, match_selection, compute_proba, compute_score
+from utils import get_current_season, get_season_from_date, match_selection, compute_proba, compute_score, display_predictions
 
 TRAINING_INTERVAL_DAYS = 30
 
@@ -39,6 +39,11 @@ def task_init_db():
 def task_upload_db():
     upload_db()
 
+# ── Utils ─────────────────────────────────────────────────────────────────────
+
+@task(name="Display predictions")
+def task_display_predictions(df: pd.DataFrame):
+    return display_predictions(df)
 
 # ── Scraping tasks ────────────────────────────────────────────────────────────
 
@@ -221,6 +226,7 @@ def prediction_flow(df: pd.DataFrame):
         df_predicted = task_score_matrices(df_predicted, rho)
         df_predicted = task_compute_proba(df_predicted)
         df_predicted = task_compute_score(df_predicted)
+        df_predicted = task_display_predictions(df_predicted)
         return df_predicted
          
 
