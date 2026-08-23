@@ -53,3 +53,17 @@ rsconnect/
 
 # Output table
 table_output.txt
+
+# Env var
+.env
+
+# Python cache 
+__pycache__/
+*.pyc
+*.pyo
+
+# MLFlow runs
+mlruns/
+
+# CSV files
+*.csv

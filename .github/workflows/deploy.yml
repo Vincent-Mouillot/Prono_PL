@@ -18,4 +18,4 @@ jobs:
           cd /home/vmouillot/Prono_PL
           git fetch --all
           git pull --ff-only
-          echo "Code mis à jour avec succès !"
+          echo "Code updated successfully!"
