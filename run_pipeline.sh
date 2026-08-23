@@ -15,8 +15,10 @@ NTFY_URL="https://ntfy.sh/$NTFY_TOPIC"
 
 # Step 1: Run the pipeline (full run log kept separately for debugging;
 # pipeline.py writes just the predictions table, or "No match today", to $OUTPUT_FILE)
+# PYTHONUTF8 forces UTF-8 stdio regardless of the system locale — needed because
+# stdout isn't a TTY here (redirected to a file), and some prints use non-ASCII characters (—)
 source .venv/bin/activate
-python pipeline.py > "$LOG_FILE" 2>&1
+PYTHONUTF8=1 python pipeline.py > "$LOG_FILE" 2>&1
 
 # Step 2: Check if the output file exists and send the content via ntfy
 if [[ -f "$OUTPUT_FILE" ]]; then
