@@ -278,8 +278,8 @@ def full_pipeline(seasons: Optional[list] = None, force_train: bool = False, for
 
 if __name__ == "__main__":
     # First run
-    full_pipeline(seasons=["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],
-                  force_train=True, force_compute=True)
+    # full_pipeline(seasons=["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],
+    #               force_train=True, force_compute=True)
 
     # Run daily
-    # full_pipeline()
+    full_pipeline()
