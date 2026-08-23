@@ -167,4 +167,79 @@ ALL_SEASONS = {
         {"season": 2021, "title": "Watford",                 "rank": 19},  # promoted
         {"season": 2021, "title": "Brentford",               "rank": 20},  # promoted
     ]),
+
+    # 2020-21 promoted: Leeds, West Bromwich Albion, Fulham
+    # 2019-20 final standings used as initial ranking
+    2020: pd.DataFrame([
+        {"season": 2020, "title": "Liverpool",               "rank": 1},
+        {"season": 2020, "title": "Manchester City",         "rank": 2},
+        {"season": 2020, "title": "Manchester United",       "rank": 3},
+        {"season": 2020, "title": "Chelsea",                 "rank": 4},
+        {"season": 2020, "title": "Leicester",               "rank": 5},
+        {"season": 2020, "title": "Tottenham",               "rank": 6},
+        {"season": 2020, "title": "Wolverhampton Wanderers", "rank": 7},
+        {"season": 2020, "title": "Arsenal",                 "rank": 8},
+        {"season": 2020, "title": "Sheffield United",        "rank": 9},
+        {"season": 2020, "title": "Burnley",                 "rank": 10},
+        {"season": 2020, "title": "Southampton",             "rank": 11},
+        {"season": 2020, "title": "Everton",                 "rank": 12},
+        {"season": 2020, "title": "Newcastle United",        "rank": 13},
+        {"season": 2020, "title": "Crystal Palace",          "rank": 14},
+        {"season": 2020, "title": "Brighton",                "rank": 15},
+        {"season": 2020, "title": "West Ham",                "rank": 16},
+        {"season": 2020, "title": "Aston Villa",             "rank": 17},
+        {"season": 2020, "title": "Leeds",                   "rank": 18},  # promoted
+        {"season": 2020, "title": "West Bromwich Albion",    "rank": 19},  # promoted
+        {"season": 2020, "title": "Fulham",                  "rank": 20},  # promoted
+    ]),
+
+    # 2019-20 promoted: Norwich, Sheffield United, Aston Villa
+    # 2018-19 final standings used as initial ranking
+    2019: pd.DataFrame([
+        {"season": 2019, "title": "Manchester City",         "rank": 1},
+        {"season": 2019, "title": "Liverpool",               "rank": 2},
+        {"season": 2019, "title": "Chelsea",                 "rank": 3},
+        {"season": 2019, "title": "Tottenham",               "rank": 4},
+        {"season": 2019, "title": "Arsenal",                 "rank": 5},
+        {"season": 2019, "title": "Manchester United",       "rank": 6},
+        {"season": 2019, "title": "Wolverhampton Wanderers", "rank": 7},
+        {"season": 2019, "title": "Everton",                 "rank": 8},
+        {"season": 2019, "title": "Leicester",               "rank": 9},
+        {"season": 2019, "title": "West Ham",                "rank": 10},
+        {"season": 2019, "title": "Watford",                 "rank": 11},
+        {"season": 2019, "title": "Crystal Palace",          "rank": 12},
+        {"season": 2019, "title": "Newcastle United",        "rank": 13},
+        {"season": 2019, "title": "Bournemouth",             "rank": 14},
+        {"season": 2019, "title": "Burnley",                 "rank": 15},
+        {"season": 2019, "title": "Southampton",             "rank": 16},
+        {"season": 2019, "title": "Brighton",                "rank": 17},
+        {"season": 2019, "title": "Norwich",                 "rank": 18},  # promoted
+        {"season": 2019, "title": "Sheffield United",        "rank": 19},  # promoted
+        {"season": 2019, "title": "Aston Villa",             "rank": 20},  # promoted
+    ]),
+
+    # 2018-19 promoted: Wolverhampton Wanderers, Cardiff, Fulham
+    # 2017-18 final standings used as initial ranking
+    2018: pd.DataFrame([
+        {"season": 2018, "title": "Manchester City",         "rank": 1},
+        {"season": 2018, "title": "Manchester United",       "rank": 2},
+        {"season": 2018, "title": "Tottenham",               "rank": 3},
+        {"season": 2018, "title": "Liverpool",               "rank": 4},
+        {"season": 2018, "title": "Chelsea",                 "rank": 5},
+        {"season": 2018, "title": "Arsenal",                 "rank": 6},
+        {"season": 2018, "title": "Burnley",                 "rank": 7},
+        {"season": 2018, "title": "Everton",                 "rank": 8},
+        {"season": 2018, "title": "Leicester",               "rank": 9},
+        {"season": 2018, "title": "Newcastle United",        "rank": 10},
+        {"season": 2018, "title": "Crystal Palace",          "rank": 11},
+        {"season": 2018, "title": "Bournemouth",             "rank": 12},
+        {"season": 2018, "title": "West Ham",                "rank": 13},
+        {"season": 2018, "title": "Watford",                 "rank": 14},
+        {"season": 2018, "title": "Brighton",                "rank": 15},
+        {"season": 2018, "title": "Huddersfield",            "rank": 16},
+        {"season": 2018, "title": "Southampton",             "rank": 17},
+        {"season": 2018, "title": "Wolverhampton Wanderers", "rank": 18},  # promoted
+        {"season": 2018, "title": "Cardiff",                 "rank": 19},  # promoted
+        {"season": 2018, "title": "Fulham",                  "rank": 20},  # promoted
+    ]),
 }
