@@ -42,7 +42,7 @@ def task_upload_db():
 # ── Utils ─────────────────────────────────────────────────────────────────────
 
 @task(name="Display predictions")
-def task_display_predictions(df: pd.DataFrame):
+def task_display_predictions(df: pd.DataFrame) -> str:
     return display_predictions(df)
 
 @task(name="Save predictions to DB", retries=2, retry_delay_seconds=30)
@@ -234,8 +234,8 @@ def prediction_flow(df: pd.DataFrame) -> Optional[pd.DataFrame]:
     return df_predicted
 
 @flow(name="Save predictions")
-def save_predictions_flow(df_predicted: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
-    """Persist predictions to DB and return them merged with team names for display."""
+def save_predictions_flow(df_predicted: Optional[pd.DataFrame]) -> Optional[str]:
+    """Persist predictions to DB and return the compact notification text."""
     if df_predicted is None:
         return None
 
@@ -268,12 +268,12 @@ def full_pipeline(seasons: Optional[list] = None, force_train: bool = False, for
 
     # 6. Predictions
     df_predicted = prediction_flow(df_long)
-    df_predictions = save_predictions_flow(df_predicted)
+    notification_text = save_predictions_flow(df_predicted)
 
     # 7. Upload DB again (predictions written after step 4's upload)
     database_upload_flow()
 
-    notification = df_predictions.to_string(index=False) if df_predictions is not None else "No match today"
+    notification = notification_text if notification_text is not None else "No match today"
     Path("table_output.txt").write_text(notification)
     print(notification)
 
