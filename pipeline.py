@@ -111,8 +111,8 @@ def task_preprocessing(df: pd.DataFrame) -> pd.DataFrame:
     return preprocessing_function(df)
 
 @task(name="Select today matches", retries=2, retry_delay_seconds=30)
-def task_match_selection(df: pd.DataFrame) -> pd.DataFrame:
-    return match_selection(df)
+def task_match_selection(df: pd.DataFrame, nb_days: int = 0) -> pd.DataFrame:
+    return match_selection(df, nb_days)
 
 @task(name="Predict today matches", retries=2, retry_delay_seconds=30)
 def task_predictions(df: pd.DataFrame) -> pd.DataFrame:
