@@ -9,7 +9,7 @@ def display_predictions(df_predictions: pd.DataFrame) -> pd.DataFrame:
     con.close()
 
     df_games = df_games.merge(df_predictions, on="id", how="inner")
-    df_games = df_games[["id", "h_team_short", "pct_home", "pct_draw", "pct_away", "a_team_short", "score", "pct_score"]]
+    df_games = df_games[["h_team_short", "pct_home", "pct_draw", "pct_away", "a_team_short", "score", "pct_score"]]
     df_games.rename(columns={"h_team_short": "Home",
                              "pct_home": "H %",
                              "pct_draw": "D %",

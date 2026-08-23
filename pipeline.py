@@ -273,7 +273,9 @@ def full_pipeline(seasons: Optional[list] = None, force_train: bool = False, for
     # 7. Upload DB again (predictions written after step 4's upload)
     database_upload_flow()
 
-    print(df_predictions)
+    notification = df_predictions.to_string(index=False) if df_predictions is not None else "No match today"
+    Path("table_output.txt").write_text(notification)
+    print(notification)
 
 
 if __name__ == "__main__":
