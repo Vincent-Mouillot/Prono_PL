@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 # Database
-from database import DB_PATH, init_db, check_db_exists, download_db, upload_db
+from database import DB_PATH, init_db, check_db_exists, download_db, upload_db, save_predictions
 
 # Scrapers
 from scrapers import get_calendar, get_players_stats, get_teams_stats
@@ -44,6 +44,10 @@ def task_upload_db():
 @task(name="Display predictions")
 def task_display_predictions(df: pd.DataFrame):
     return display_predictions(df)
+
+@task(name="Save predictions to DB", retries=2, retry_delay_seconds=30)
+def task_save_predictions(df: pd.DataFrame) -> pd.DataFrame:
+    return save_predictions(df)
 
 # ── Scraping tasks ────────────────────────────────────────────────────────────
 
@@ -214,21 +218,29 @@ def training_flow(force_train: bool = False):
     return df_long
 
 @flow(name="Predictions")
-def prediction_flow(df: pd.DataFrame):
+def prediction_flow(df: pd.DataFrame) -> Optional[pd.DataFrame]:
     """Select today matches and if exists predict xG"""
     df_selected = task_match_selection(df)
     if df_selected.empty:
         print("No match today")
-    else:
-        df_predicted = task_predictions(df_selected)
-        df_games = task_load_games()
-        rho = task_rho_estimator(df_games)
-        df_predicted = task_score_matrices(df_predicted, rho)
-        df_predicted = task_compute_proba(df_predicted)
-        df_predicted = task_compute_score(df_predicted)
-        df_predicted = task_display_predictions(df_predicted)
-        return df_predicted
-         
+        return None
+
+    df_predicted = task_predictions(df_selected)
+    df_games = task_load_games()
+    rho = task_rho_estimator(df_games)
+    df_predicted = task_score_matrices(df_predicted, rho)
+    df_predicted = task_compute_proba(df_predicted)
+    df_predicted = task_compute_score(df_predicted)
+    return df_predicted
+
+@flow(name="Save predictions")
+def save_predictions_flow(df_predicted: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
+    """Persist predictions to DB and return them merged with team names for display."""
+    if df_predicted is None:
+        return None
+
+    task_save_predictions(df_predicted)
+    return task_display_predictions(df_predicted)
 
 # ── Pipelines ─────────────────────────────────────────────────────────────────
 
@@ -255,7 +267,13 @@ def full_pipeline(seasons: Optional[list] = None, force_train: bool = False, for
     df_long = training_flow(force_train=force_train)
 
     # 6. Predictions
-    df_predictions = prediction_flow(df_long)
+    df_predicted = prediction_flow(df_long)
+    df_predictions = save_predictions_flow(df_predicted)
+
+    # 7. Upload DB again (predictions written after step 4's upload)
+    database_upload_flow()
+
+    print(df_predictions)
 
 
 if __name__ == "__main__":

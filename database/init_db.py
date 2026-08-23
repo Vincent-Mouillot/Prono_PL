@@ -86,6 +86,18 @@ def init_db():
         rank    INTEGER,
         PRIMARY KEY (season, title)
     );
+
+    CREATE TABLE IF NOT EXISTS predictions (
+        id            TEXT PRIMARY KEY,
+        lam           REAL,
+        mu            REAL,
+        pct_home      REAL,
+        pct_draw      REAL,
+        pct_away      REAL,
+        score         TEXT,
+        pct_score     REAL,
+        predicted_at  TEXT
+    );
     """)
 
     con.commit()
