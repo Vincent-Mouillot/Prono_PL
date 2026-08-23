@@ -55,23 +55,23 @@ def get_calendar(season: str = "2025"):
         con.close()
         return
 
-    # Identifier les nouvelles lignes
+    # Identify new rows
     new_rows = df[~df["id"].isin(existing_df["id"])]
 
-    # Identifier les lignes existantes à mettre à jour
+    # Identify existing rows to update
     merged = df.merge(existing_df, on="id", how="inner", suffixes=("", "_old"))
 
-    # Détecter les changements
+    # Detect changes
     cols_to_compare = [col for col in df.columns if col != "id"]
     updated_rows = merged[
         (merged[cols_to_compare] != merged[[f"{col}_old" for col in cols_to_compare]].values).any(axis=1)
     ][df.columns]
 
-    # Insert nouvelles lignes
+    # Insert new rows
     if not new_rows.empty:
         new_rows.to_sql("games", con, if_exists="append", index=False)
 
-    # Update lignes existantes modifiées
+    # Update modified existing rows
     if not updated_rows.empty:
         cursor = con.cursor()
         for _, row in updated_rows.iterrows():

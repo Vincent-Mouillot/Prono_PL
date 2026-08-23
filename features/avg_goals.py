@@ -10,7 +10,7 @@ def compute_avg_goals(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window:
     df_calendar["datetime"] = pd.to_datetime(df_calendar["datetime"])
 
     if window == "all":
-        # Cumul remis à zéro à chaque saison (1 but/match par défaut au 1er match)
+        # Cumulative sum reset every season (defaults to 1 goal/match on the 1st match)
         group_key = ["id_team", "season"]
         avg_G_for = df_teams.groupby(group_key)["scored"].cumsum() / (df_teams.groupby(group_key)["scored"].cumcount() + 1)
         avg_G_against = df_teams.groupby(group_key)["missed"].cumsum() / (df_teams.groupby(group_key)["missed"].cumcount() + 1)
@@ -24,7 +24,7 @@ def compute_avg_goals(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window:
             lambda x: x.rolling(int_window, min_periods=1).mean()
         )
 
-    # Décalage d'un match en arrière (même groupe) → valeur du match précédent
+    # Shift back one match (same group) → previous match's value
     df_teams["avg_G_for"] = avg_G_for.groupby([df_teams[k] for k in group_key]).shift(1)
     df_teams["avg_G_against"] = avg_G_against.groupby([df_teams[k] for k in group_key]).shift(1)
 

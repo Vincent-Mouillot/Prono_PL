@@ -10,7 +10,7 @@ def compute_ewp(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window: str =
     df_calendar["datetime"] = pd.to_datetime(df_calendar["datetime"])
 
     if window == "all":
-        # Cumul remis à zéro à chaque saison (0.5 au 1er match de la saison)
+        # Cumulative sum reset every season (0.5 on the season's 1st match)
         group_key = ["id_team", "season"]
         npxG_for = df_teams.groupby(group_key)["npxG"].cumsum()
         npxG_against = df_teams.groupby(group_key)["npxGA"].cumsum()
@@ -24,7 +24,7 @@ def compute_ewp(df_teams: pd.DataFrame, df_calendar: pd.DataFrame, window: str =
             lambda x: x.rolling(int_window, min_periods=1).sum()
         )
 
-    # Décalage d'un match en arrière (même groupe) → valeur du match précédent
+    # Shift back one match (same group) → previous match's value
     df_teams["npxG_for"] = npxG_for.groupby([df_teams[k] for k in group_key]).shift(1)
     df_teams["npxG_against"] = npxG_against.groupby([df_teams[k] for k in group_key]).shift(1)
 

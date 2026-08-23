@@ -40,7 +40,7 @@ for (i in seq_along(test)) {
     as.numeric()
   
   if (length(odds) %% 3 != 0) {
-    warning(paste("Les cotes pour l'élément", i, "ne sont pas un multiple de 3. Ignoré."))
+    warning(paste("Odds for element", i, "are not a multiple of 3. Skipped."))
     next
   }
   
@@ -49,7 +49,7 @@ for (i in seq_along(test)) {
   colnames(df) <- c("H", "D", "A")
   
   if (length(site_names) != nrow(df)) {
-    warning(paste("Nombre de sites et de lignes différent pour l'élément", i, ". Ignoré."))
+    warning(paste("Number of sites and rows differ for element", i, ". Skipped."))
     next
   }
   
@@ -107,10 +107,10 @@ df_book <- bind_rows(all_dfs) %>%
          A_percent = round((A_prob / (H_prob + D_prob + A_prob)) * 100, 0)) %>% 
   select(-c(H_prob, D_prob, A_prob))
 
-# Connexion à la base de données SQLite
+# Connect to the SQLite database
 con <- dbConnect(RSQLite::SQLite(), dbname = sqlite_file)
 
-# Création de la table Book_history si elle n'existe pas
+# Create the Book_history table if it doesn't exist
 dbExecute(con, "
   CREATE TABLE IF NOT EXISTS Book_history (
     H_team TEXT,
@@ -126,11 +126,11 @@ dbExecute(con, "
   );
 ")
 
-# Fonction pour insérer ou mettre à jour les données dans la table Book_history
+# Function to insert or update the data in the Book_history table
 insert_or_update_book_history <- function(df_book, con) {
   
   for (i in 1:nrow(df_book)) {
-    # Extraction des valeurs d'une ligne du dataframe
+    # Extract the values of a dataframe row
     H_team <- df_book$H_team[i]
     A_team <- df_book$A_team[i]
     site <- df_book$Site[i]
@@ -141,7 +141,7 @@ insert_or_update_book_history <- function(df_book, con) {
     d_percent <- df_book$D_percent[i]
     a_percent <- df_book$A_percent[i]
     
-    # Vérifier si la combinaison existe déjà avec une requête paramétrée
+    # Check if the combination already exists using a parameterized query
     query <- dbGetQuery(con, "
       SELECT COUNT(*) AS count FROM Book_history
       WHERE H_team = ? AND A_team = ? AND Site = ?", 
@@ -149,14 +149,14 @@ insert_or_update_book_history <- function(df_book, con) {
     )
     
     if (query$count == 0) {
-      # Si la combinaison n'existe pas, on insère les données (requête paramétrée)
+      # If the combination doesn't exist, insert the data (parameterized query)
       dbExecute(con, "
         INSERT INTO Book_history (H_team, A_team, Site, H, D, A, H_percent, D_percent, A_percent)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                 params = list(H_team, A_team, site, h, d, a, h_percent, d_percent, a_percent)
       )
     } else {
-      # Si la combinaison existe, on met à jour les autres colonnes (requête paramétrée)
+      # If the combination exists, update the other columns (parameterized query)
       dbExecute(con, "
         UPDATE Book_history
         SET H = ?, D = ?, A = ?, H_percent = ?, D_percent = ?, A_percent = ?
@@ -167,8 +167,8 @@ insert_or_update_book_history <- function(df_book, con) {
   }
 }
 
-# Appel de la fonction pour insérer ou mettre à jour les données
+# Call the function to insert or update the data
 insert_or_update_book_history(df_book, con)
 
-# Déconnexion de la base de données
+# Disconnect from the database
 dbDisconnect(con)

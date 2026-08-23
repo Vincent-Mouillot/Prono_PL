@@ -11,7 +11,7 @@ def neg_log_likelihood(params, teams, home_idx, away_idx, goals_h, goals_a):
     n = len(teams)
 
     log_alpha = np.zeros(n)
-    log_alpha[1:] = params[:n-1]        # équipe 0 = référence, alpha fixé à 1 (log=0)
+    log_alpha[1:] = params[:n-1]        # team 0 = reference, alpha fixed to 1 (log=0)
 
     log_beta  = params[n-1:2*n-1]
     log_gamma = params[-1]

@@ -12,73 +12,73 @@ import platform
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# Trouver le répertoire racine contenant "Prono_PL" et créer le chemin vers le fichier SQLite
-root = Path(__file__).resolve().parent  # Partir du répertoire actuel du script
+# Find the root directory containing "Prono_PL" and build the path to the SQLite file
+root = Path(__file__).resolve().parent  # Start from the script's current directory
 
-# Remonter dans les répertoires jusqu'à ce que l'on trouve "Prono_PL"
+# Walk up the directories until "Prono_PL" is found
 while not (root / 'Prono_PL').exists() and root != root.parent:
     root = root.parent
 
-# Vérification et création du chemin du fichier SQLite
+# Check and build the SQLite file path
 if (root / 'Prono_PL').exists():
     sqlite_file = root / 'Prono_PL' / 'my_database.db'
 else:
-    print("Répertoire 'Prono_PL' non trouvé")
+    print("'Prono_PL' directory not found")
 
 system = platform.system()
 if system == "Windows":
-    print("Système détecté : Windows")
+    print("Detected system: Windows")
     service = Service(ChromeDriverManager().install())
 elif system == "Linux":
-    print("Système détecté : Linux (Raspberry Pi présumé)")
+    print("Detected system: Linux (assumed Raspberry Pi)")
     service = Service('/usr/bin/chromedriver')
 else:
-    raise EnvironmentError(f"Système d'exploitation non supporté : {system}")
+    raise EnvironmentError(f"Unsupported operating system: {system}")
 
 options = Options()
 options.add_argument("--headless")
 options.add_argument("--window-size=2560,1440")
 
-# Utilisation de webdriver-manager pour gérer le chromedriver
+# Use webdriver-manager to manage the chromedriver
 driver = webdriver.Chrome(service=service, options=options)
 
 try:
-    # Naviguer vers l'URL cible
+    # Navigate to the target URL
     url = "https://theanalyst.com/eu/competition/premier-league/fixtures"
     driver.get(url)
 
     WebDriverWait(driver, 60).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, 
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR,
                                              "button.DatePickerHeader-module_datepicker-header-date__wsJVr.DatePickerHeader-module_datepicker-header-date--clickable__v4vmf"))
     )
 
-    # Trouver le bouton en utilisant ses classes
-    button = driver.find_element(By.CSS_SELECTOR, 
+    # Find the button using its classes
+    button = driver.find_element(By.CSS_SELECTOR,
         "button.DatePickerHeader-module_datepicker-header-date__wsJVr.DatePickerHeader-module_datepicker-header-date--clickable__v4vmf")
-    
-    # Récupérer le texte du bouton
+
+    # Get the button's text
     date_text = button.text
 
-    # Convertir le texte en objet datetime
+    # Convert the text into a datetime object
     date_object = datetime.strptime(date_text, "%b %d, %Y")
 
-    # Reformatter en "YYYY-MM-DD"
+    # Reformat as "YYYY-MM-DD"
     formatted_date = date_object.strftime("%Y-%m-%d")
 
     WebDriverWait(driver, 60).until(
         EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a.FixtureTile-module_fixture-tile-link__GmKtI"))
     )
-    # Trouver les éléments des liens des matchs
+    # Find the match link elements
     elements = driver.find_elements(By.CSS_SELECTOR, "a.FixtureTile-module_fixture-tile-link__GmKtI")
     data = []
 
-    # Parcourir les éléments pour extraire les informations
+    # Iterate over the elements to extract the information
     for element in elements:
         try:
             WebDriverWait(element, 60).until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.FixtureTile-module_fixture-tile-team__IOR4n"))
             )
-            # Récupérer les équipes
+            # Get the teams
             team_elements = element.find_elements(By.CSS_SELECTOR, "div.FixtureTile-module_fixture-tile-team__IOR4n")
             if len(team_elements) >= 2:
                 home_team = team_elements[0].text.strip()
@@ -87,24 +87,24 @@ try:
                 home_team = "Unknown"
                 away_team = "Unknown"
 
-            # Récupérer les probabilités si elles existent
-            probabilities = element.find_elements(By.CSS_SELECTOR, "div.FixtureTile-module_probabilities-bar__8LfcA") 
+            # Get the probabilities if they exist
+            probabilities = element.find_elements(By.CSS_SELECTOR, "div.FixtureTile-module_probabilities-bar__8LfcA")
 
             home_style = probabilities[0].get_attribute("style")
             draw_style = probabilities[1].get_attribute("style")
             away_style = probabilities[2].get_attribute("style")
-        
-            # Extraire le width depuis le style (par exemple: "width: 48%;")
+
+            # Extract the width from the style (e.g. "width: 48%;")
             home_width = home_style.split("width:")[1].split(";")[0].strip().replace('%', '')
             draw_width = draw_style.split("width:")[1].split(";")[0].strip().replace('%', '')
             away_width = away_style.split("width:")[1].split(";")[0].strip().replace('%', '')
 
-            # Convertir en float
+            # Convert to float
             home_width = round(float(home_width))
             draw_width = round(float(draw_width))
             away_width = round(float(away_width))
 
-            # Ajouter les informations dans la liste
+            # Add the information to the list
             data.append({
                 "Date": formatted_date,
                 "H_team_name": home_team,
@@ -114,32 +114,32 @@ try:
                 "A_team_name": away_team
             })
         except Exception as e:
-            print(f"Erreur lors de l'extraction des données : {e}")
-    
-    # Créer un DataFrame pandas avec les données collectées
+            print(f"Error while extracting data: {e}")
+
+    # Build a pandas DataFrame from the collected data
     df = pd.DataFrame(data)
-    
+
     conn = sqlite3.connect(sqlite_file)
 
     try:
-        # Charger les IDs des équipes depuis la table Table_teams
+        # Load the team IDs from the Table_teams table
         query = """
         SELECT Opta_Name, Id
         FROM Table_teams
         """
         team_mapping = pd.read_sql_query(query, conn)
 
-        # Créer un dictionnaire pour les correspondances des noms
+        # Build a dictionary for the name mapping
         team_dict = dict(zip(team_mapping["Opta_Name"], team_mapping["Id"]))
 
-        # Ajouter les IDs des équipes dans le DataFrame
+        # Add the team IDs to the DataFrame
         df["H_team"] = df["H_team_name"].map(team_dict)
         df["A_team"] = df["A_team_name"].map(team_dict)
 
-        # Supprimer les colonnes des noms d'équipes, car elles ne sont plus nécessaires
+        # Drop the team name columns, no longer needed
         df = df[["Date", "H_team", "A_team", "H_percent", "D_percent", "A_percent"]]
 
-        # Créer la table "Opta" si elle n'existe pas
+        # Create the "Opta" table if it doesn't exist
         create_table_query = """
         CREATE TABLE IF NOT EXISTS Opta (
             Date TEXT,
@@ -153,28 +153,28 @@ try:
         """
         conn.execute(create_table_query)
 
-        # Insérer les données dans la table
-        # Charger les données existantes pour détecter les conflits
+        # Insert the data into the table
+        # Load the existing data to detect conflicts
         existing_data_query = """
             SELECT Date, H_team, A_team
             FROM Opta
         """
         existing_data = pd.read_sql_query(existing_data_query, conn)
 
-        # Identifier les nouvelles lignes à insérer
+        # Identify the new rows to insert
         merged_df = df.merge(existing_data, on=["Date", "H_team", "A_team"], how="left", indicator=True)
 
-        # Nouvelles lignes à insérer
+        # New rows to insert
         to_insert = merged_df[merged_df["_merge"] == "left_only"].drop(columns=["_merge"])
 
-        # Lignes existantes à mettre à jour
+        # Existing rows to update
         to_update = merged_df[merged_df["_merge"] == "both"].drop(columns=["_merge"])
 
-        # Insérer les nouvelles lignes
+        # Insert the new rows
         if not to_insert.empty:
             to_insert.to_sql("Opta", conn, if_exists="append", index=False)
 
-        # Mettre à jour les lignes existantes
+        # Update the existing rows
         if not to_update.empty:
             for _, row in to_update.iterrows():
                 update_query = """
@@ -186,11 +186,11 @@ try:
 
         conn.commit()
 
-        print("Les données ont été insérées avec succès.")
+        print("Data successfully inserted.")
     finally:
-        # Fermer la connexion à la base de données
+        # Close the database connection
         conn.close()
 
 finally:
-    # Fermer le navigateur
+    # Close the browser
     driver.quit()

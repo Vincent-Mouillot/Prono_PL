@@ -78,9 +78,9 @@ def select_features(df: pd.DataFrame, min_features: int = 1) -> list:
     best_idx = np.where(selector.cv_results_["n_features"] == selector.n_features_)[0][0]
     best_rmse = -selector.cv_results_["mean_test_score"][best_idx]
 
-    print(f"Features sélectionnées ({len(selected)}/{len(X.columns)}), RMSE CV: {best_rmse:.4f}")
-    print(f"  gardées : {selected}")
-    print(f"  retirées : {dropped}")
+    print(f"Selected features ({len(selected)}/{len(X.columns)}), RMSE CV: {best_rmse:.4f}")
+    print(f"  kept: {selected}")
+    print(f"  dropped: {dropped}")
 
     return selected
 
@@ -105,7 +105,7 @@ def train(df: pd.DataFrame):
             rmse = np.sqrt(mean_squared_error(y_test, model.predict(X_test)))
             rmse_scores.append(rmse)
             mlflow.log_metric("rmse_fold", rmse, step=int(season))
-            print(f"Saison {season}/{int(season) + 1} — RMSE: {rmse:.4f}")
+            print(f"Season {season}/{int(season) + 1} — RMSE: {rmse:.4f}")
 
         mean_rmse = np.mean(rmse_scores)
         std_rmse = np.std(rmse_scores)
@@ -114,7 +114,7 @@ def train(df: pd.DataFrame):
         mlflow.log_metric("rmse_mean", mean_rmse)
         mlflow.log_metric("rmse_std", std_rmse)
 
-        # Réentraîner le modèle final sur toutes les données
+        # Retrain the final model on all the data
         final_model = RandomForestRegressor(**params)
         final_model.fit(X, y)
 
