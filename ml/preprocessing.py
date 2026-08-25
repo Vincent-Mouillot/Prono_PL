@@ -1,5 +1,6 @@
 import re
 import pandas as pd
+import numpy as np
 
 shared_cols = ['id', 'datetime']
 
@@ -23,6 +24,10 @@ opp_features = {
     'power' : ['off_power', 'def_power'],
 }
 
+DC_POWER_COLS = ["off_power", "def_power", "off_power_opp", "def_power_opp"]
+
+NON_FEATURE_COLS = ["id", "datetime", "xg", "is_home"]
+
 # Flatten to use in function
 features_flat     = [f for group in team_features.values() for f in group]
 opp_features_flat = [f for group in opp_features.values() for f in group]
@@ -43,8 +48,18 @@ def build_side(df : pd.DataFrame, home_map, away_map, is_home):
     for feat in opp_features_flat:
         if feat in opp_map:
             result[f'{feat}_opp'] = df[opp_map[feat]]
+
+    if 'gamma' in df.columns:
+        result['log_gamma_home'] = np.log(df['gamma']) * int(is_home)
     
     return result
+
+def to_log_powers(df_long: pd.DataFrame) -> pd.DataFrame:
+    """Pour un arbre c'est un no-op (transfo monotone → mêmes splits).
+    Pour un GLM à lien log, c'est ce qui rend la structure DC exactement linéaire."""
+    for col in DC_POWER_COLS:
+        df_long[f"log_{col}"] = np.log(df_long[col].clip(lower=1e-6))
+    return df_long.drop(columns=DC_POWER_COLS)
 
 def preprocessing_function(df_calendar : pd.DataFrame):
     df = df_calendar.copy()
@@ -55,7 +70,7 @@ def preprocessing_function(df_calendar : pd.DataFrame):
 
     df_long = pd.concat([build_side(df, home_map, away_map, True), build_side(df, home_map, away_map, False)]).reset_index(drop=True)
 
-    return df_long
+    return to_log_powers(df_long)
 
 if __name__ == "__main__":
     calendar = pd.read_csv("df_calendar.csv")

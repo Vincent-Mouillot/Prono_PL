@@ -3,6 +3,7 @@ import mlflow
 import mlflow.sklearn
 from pathlib import Path
 
+from ml.preprocessing import NON_FEATURE_COLS
 from utils import match_selection
 
 MLFLOW_TRACKING_URI = "sqlite:///" + str(Path(__file__).resolve().parent.parent / "mlflow.db")
@@ -20,7 +21,7 @@ def predictions(df: pd.DataFrame) -> pd.DataFrame:
     today_matches = df.copy()
 
     model = load_model()
-    X = today_matches.drop(columns=["id", "datetime", "xg"])
+    X = today_matches.drop(columns=NON_FEATURE_COLS)
     today_matches = today_matches.copy()
     today_matches["xg_predicted"] = model.predict(X)
     return today_matches

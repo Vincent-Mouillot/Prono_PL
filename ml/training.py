@@ -3,19 +3,26 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import PoissonRegressor
 from sklearn.feature_selection import RFECV
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_poisson_deviance
 from pathlib import Path
 from datetime import datetime, date
 
+from ml.preprocessing import NON_FEATURE_COLS
 from utils import get_season_from_date
 
 MLFLOW_TRACKING_URI = "sqlite:///" + str(Path(__file__).resolve().parent.parent / "mlflow.db")
 MLFLOW_EXPERIMENT_NAME = "Prono_PL"
 
-RF_PARAMS = {"n_estimators": 100, "max_depth": 5, "random_state": 42}
+MODEL_PARAMS = {"alpha": 1e-6, "max_iter": 1000}
 
+def make_model():
+    return PoissonRegressor(**MODEL_PARAMS)
+
+def dc_baseline(X: pd.DataFrame, scale: float = 1.0):
+    """DC pur, zéro modèle — le plancher que le modèle doit battre."""
+    return scale * np.exp(X["log_off_power"] + X["log_def_power_opp"] + X.get("log_gamma_home", 0))
 
 def days_since_last_training():
     """Days since the last MLflow training run, or None if no run exists yet."""
@@ -39,7 +46,7 @@ def _prepare_training_data(df: pd.DataFrame):
     df_train = df.loc[~df["xg"].isnull()].sort_values("datetime").reset_index(drop=True)
     df_train["season"] = pd.to_datetime(df_train["datetime"]).apply(get_season_from_date)
 
-    X = df_train.drop(columns=["id", "datetime", "xg", "season"])
+    X = df_train.drop(columns=NON_FEATURE_COLS + ["season"])
     y = df_train["xg"]
     seasons = df_train["season"]
 
@@ -51,39 +58,6 @@ def _prepare_training_data(df: pd.DataFrame):
     return X, y, seasons, cv_splits
 
 
-def select_features(df: pd.DataFrame, min_features: int = 1) -> list:
-    """
-    Backward feature selection via RFECV: starts from all features, drops the
-    least important one at each round (RandomForestRegressor.feature_importances_),
-    refits on the same expanding per-season CV splits as train() (no temporal leakage),
-    and keeps the subset with the best mean RMSE.
-
-    Returns the list of selected feature names.
-    """
-    X, y, _, cv_splits = _prepare_training_data(df)
-
-    selector = RFECV(
-        estimator=RandomForestRegressor(**RF_PARAMS),
-        step=1,
-        min_features_to_select=min_features,
-        cv=cv_splits,
-        scoring="neg_root_mean_squared_error",
-        n_jobs=-1,
-    )
-    selector.fit(X, y)
-
-    selected = X.columns[selector.support_].tolist()
-    dropped = X.columns[~selector.support_].tolist()
-    # cv_results_["n_features"] is ascending (min_features_to_select -> n_total) — look up by value, not by guessed offset
-    best_idx = np.where(selector.cv_results_["n_features"] == selector.n_features_)[0][0]
-    best_rmse = -selector.cv_results_["mean_test_score"][best_idx]
-
-    print(f"Selected features ({len(selected)}/{len(X.columns)}), RMSE CV: {best_rmse:.4f}")
-    print(f"  kept: {selected}")
-    print(f"  dropped: {dropped}")
-
-    return selected
-
 
 def train(df: pd.DataFrame):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
@@ -91,44 +65,48 @@ def train(df: pd.DataFrame):
 
     X, y, seasons, cv_splits = _prepare_training_data(df)
 
-    params = RF_PARAMS
-    rmse_scores = []
+    params = MODEL_PARAMS
+    dev_scores = []
 
     with mlflow.start_run(run_name="xg_timeseries_cv"):
         for season, (train_idx, test_idx) in zip(sorted(seasons.unique())[1:], cv_splits):
             X_train, X_test = X.loc[train_idx], X.loc[test_idx]
             y_train, y_test = y.loc[train_idx], y.loc[test_idx]
 
-            model = RandomForestRegressor(**params)
+            model = make_model()
             model.fit(X_train, y_train)
 
-            rmse = np.sqrt(mean_squared_error(y_test, model.predict(X_test)))
-            rmse_scores.append(rmse)
-            mlflow.log_metric("rmse_fold", rmse, step=int(season))
-            print(f"Season {season}/{int(season) + 1} — RMSE: {rmse:.4f}")
+            dev = mean_poisson_deviance(y_test, model.predict(X_test))
+            scale = y_train.mean() / dc_baseline(X_train).mean()
+            dev_base = mean_poisson_deviance(y_test, dc_baseline(X_test, scale))
+            dev_scores.append(dev)
 
-        mean_rmse = np.mean(rmse_scores)
-        std_rmse = np.std(rmse_scores)
+            mlflow.log_metric("poisson_deviance_fold", dev, step=int(season))
+            mlflow.log_metric("poisson_deviance_baseline_fold", dev_base, step=int(season))
+            print(f"Season {season}/{int(season)+1} — deviance: {dev:.4f} (DC seul: {dev_base:.4f})")
+
+        mean_dev = np.mean(dev_scores)
+        std_dev = np.std(dev_scores)
 
         mlflow.log_params(params)
-        mlflow.log_metric("rmse_mean", mean_rmse)
-        mlflow.log_metric("rmse_std", std_rmse)
+        mlflow.log_metric("dev_mean", mean_dev)
+        mlflow.log_metric("dev_std", std_dev)
 
         # Retrain the final model on all the data
-        final_model = RandomForestRegressor(**params)
+        final_model = make_model()
         final_model.fit(X, y)
 
-        importance_df = pd.DataFrame({
+        coef_df = pd.DataFrame({
             "feature": X.columns,
-            "importance": final_model.feature_importances_
-        }).sort_values("importance", ascending=False)
-
-        print(importance_df.to_string())
-        mlflow.log_table(importance_df, artifact_file="feature_importances.json")
+            "coef": final_model.coef_,
+        }).reindex(final_model.coef_.argsort()[::-1])
+        print(f"intercept: {final_model.intercept_:.4f}")
+        print(coef_df.to_string())
+        mlflow.log_table(coef_df, artifact_file="coefficients.json")
 
         mlflow.sklearn.log_model(final_model, name="model_xg")
 
-        print(f"\nRMSE moyen : {mean_rmse:.4f} ± {std_rmse:.4f}")
+        print(f"\nDeviance moyen : {mean_dev:.4f} ± {std_dev:.4f}")
 
 
 if __name__ == "__main__":

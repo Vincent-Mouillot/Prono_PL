@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 
 MIN_MATCHES = 100  # rough heuristic: enough matchdays for a well-posed fit
 PEN = 1e-3
+GRAD_TOL = 1e-2
 
 def _unpack(params, n_teams):
     log_alpha     = np.zeros(n_teams)
@@ -21,7 +22,8 @@ def neg_log_likelihood(params, n_teams, home_idx, away_idx, goals_h, goals_a):
     nll     = -(poisson.logpmf(goals_h, lam).sum() + poisson.logpmf(goals_a, mu).sum())
     penalty = 0.5 * PEN * ((log_alpha[1:] ** 2).sum() + (log_beta **2).sum())
 
-    return nll + penalty
+    # return nll + penalty
+    return (lam - goals_h * np.log(lam)).sum() + (mu - goals_a * np.log(mu)).sum()
 
 def neg_log_likelihood_grad(params, n_teams, home_idx, away_idx, goals_h, goals_a):
     log_alpha, log_beta, log_gamma = _unpack(params, n_teams)
@@ -81,10 +83,11 @@ def fit_team_power(df_matches: pd.DataFrame) -> pd.DataFrame:
         method="BFGS"
     )
 
-    if not result.success:
+    max_residual = np.max(np.abs(result.jac))
+    if max_residual > GRAD_TOL:
         raise RuntimeError(
-            f"fit_team_poxer: no covergence ({result.message}) - "
-            f"max residual {np.max(np.abs(result.jac))} goals, NLL {result.fun:.2f}"
+            f"fit_team_power: no convergence ({result.message}) — "
+            f"max residual {max_residual:.4f} goals, NLL {result.fun:.2f}"
         )
 
     log_alpha, log_beta, log_gamma = _unpack(result.x, n_teams)
@@ -166,7 +169,9 @@ def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -
     }
     GAMMA_FILL = 1.3
 
-    played = df_calendar.dropna(subset=["goals_h", "goals_a"]).copy()
+    played = df_calendar.dropna(subset=["xg_h", "xg_a"]).copy()
+    played["goals_h"] = played["xg_h"]
+    played["goals_a"] = played["xg_a"]
     played["datetime"] = pd.to_datetime(played["datetime"])
     played = played.sort_values("datetime")
 
@@ -202,11 +207,10 @@ def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -
     )
     df_calendar_power = add_last_gamma(df_calendar_power, df_power)
 
-    power_cols = ["off_power_h", "def_power_h", "off_power_a", "def_power_a", "gamma"]
+    power_cols = ["off_power_h", "def_power_h", "off_power_a", "def_power_a"]
 
     early = df_calendar_power["gamma"].isna()
 
-    # Initial period : no info on no one -> neutral (1)
     df_calendar_power.loc[early, power_cols] = 1.0
     df_calendar_power["gamma"] = df_calendar_power["gamma"].fillna(GAMMA_FILL)
 
