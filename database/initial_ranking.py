@@ -38,7 +38,7 @@ ALL_SEASONS = {
         {"season": 2026, "title": "Crystal Palace",          "rank": 15},
         {"season": 2026, "title": "Nottingham Forest",       "rank": 16},
         {"season": 2026, "title": "Tottenham",               "rank": 17},
-        {"season": 2026, "title": "Coventry City",           "rank": 18},  # promoted
+        {"season": 2026, "title": "Coventry",                "rank": 18},  # promoted
         {"season": 2026, "title": "Ipswich",                 "rank": 19},  # promoted
         {"season": 2026, "title": "Hull",                    "rank": 20},  # promoted
     ]),
