@@ -43,11 +43,11 @@ def days_since_last_training():
 def _prepare_training_data(df: pd.DataFrame):
     """Sort by date, tag each row with its season, and build expanding-window
     train/test index pairs — one per season, skipping the first (not enough history)."""
-    df_train = df.loc[~df["xg"].isnull()].sort_values("datetime").reset_index(drop=True)
+    df_train = df.loc[~df["npxg"].isnull()].sort_values("datetime").reset_index(drop=True)
     df_train["season"] = pd.to_datetime(df_train["datetime"]).apply(get_season_from_date)
 
     X = df_train.drop(columns=NON_FEATURE_COLS + ["season"])
-    y = df_train["xg"]
+    y = df_train["npxg"]
     seasons = df_train["season"]
 
     cv_splits = [

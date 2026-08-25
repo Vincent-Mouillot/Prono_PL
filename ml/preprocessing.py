@@ -16,7 +16,7 @@ team_features = {
     'ranking'  : ['diff_rank'],
     'ewp'      : ['ewp_saison', 'ewp_window'],
     'power'    : ['off_power', 'def_power'],
-    'target'   : ['xg'],
+    'target'   : ['npxg'],
 }
 
 opp_features = {
@@ -26,7 +26,7 @@ opp_features = {
 
 DC_POWER_COLS = ["off_power", "def_power", "off_power_opp", "def_power_opp"]
 
-NON_FEATURE_COLS = ["id", "datetime", "xg", "is_home"]
+NON_FEATURE_COLS = ["id", "datetime", "npxg", "is_home"]
 
 # Flatten to use in function
 features_flat     = [f for group in team_features.values() for f in group]

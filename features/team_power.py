@@ -1,9 +1,12 @@
+import sqlite3
 import numpy as np
 import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
 from scipy.stats import poisson
 from dateutil.relativedelta import relativedelta
+
+from database import DB_PATH
 
 MIN_MATCHES = 100  # rough heuristic: enough matchdays for a well-posed fit
 PEN = 1e-3
@@ -146,6 +149,29 @@ def add_last_gamma(df_calendar: pd.DataFrame, df_power: pd.DataFrame) -> pd.Data
     )
 
 
+def add_npxg(df_calendar: pd.DataFrame) -> pd.DataFrame:
+    """Merge each team's non-penalty xG (understat 'npxG') onto the calendar as npxg_h/npxg_a."""
+    con = sqlite3.connect(DB_PATH)
+    teams = pd.read_sql_query("SELECT title, h_a, date, npxG FROM teams_stats;", con)
+    con.close()
+
+    teams["date"] = pd.to_datetime(teams["date"])
+    calendar = df_calendar.copy()
+    calendar["datetime"] = pd.to_datetime(calendar["datetime"])
+
+    teams_h = teams.loc[teams["h_a"] == "h", ["title", "date", "npxG"]].rename(columns={"npxG": "npxg_h"})
+    teams_a = teams.loc[teams["h_a"] == "a", ["title", "date", "npxG"]].rename(columns={"npxG": "npxg_a"})
+
+    calendar = calendar.merge(
+        teams_h, left_on=["h_team", "datetime"], right_on=["title", "date"], how="left"
+    ).drop(columns=["title", "date"])
+    calendar = calendar.merge(
+        teams_a, left_on=["a_team", "datetime"], right_on=["title", "date"], how="left"
+    ).drop(columns=["title", "date"])
+
+    return calendar
+
+
 def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -> pd.DataFrame:
     """
     Compute Dixon-Coles off_power/def_power/gamma for each date where a game is played,
@@ -161,7 +187,8 @@ def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -
         nb_months: size of the trailing fitting window, in months
 
     Returns:
-        df_calendar with added 'off_power_h', 'def_power_h', 'off_power_a', 'def_power_a', 'gamma' columns
+        df_calendar with added 'npxg_h', 'npxg_a', 'off_power_h', 'def_power_h',
+        'off_power_a', 'def_power_a', 'gamma' columns
     """
     PROMOTED_FILL = {
         "off_power_h": 0.6, "def_power_h": 1.4,
@@ -169,9 +196,11 @@ def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -
     }
     GAMMA_FILL = 1.3
 
-    played = df_calendar.dropna(subset=["xg_h", "xg_a"]).copy()
-    played["goals_h"] = played["xg_h"]
-    played["goals_a"] = played["xg_a"]
+    df_calendar = add_npxg(df_calendar)
+
+    played = df_calendar.dropna(subset=["npxg_h", "npxg_a"]).copy()
+    played["goals_h"] = played["npxg_h"]
+    played["goals_a"] = played["npxg_a"]
     played["datetime"] = pd.to_datetime(played["datetime"])
     played = played.sort_values("datetime")
 
