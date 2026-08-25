@@ -3,13 +3,11 @@ import numpy as np
 import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
-from scipy.stats import poisson
 from dateutil.relativedelta import relativedelta
 
 from database import DB_PATH
 
 MIN_MATCHES = 100  # rough heuristic: enough matchdays for a well-posed fit
-PEN = 1e-3
 GRAD_TOL = 1e-2
 
 def _unpack(params, n_teams):
@@ -22,10 +20,6 @@ def neg_log_likelihood(params, n_teams, home_idx, away_idx, goals_h, goals_a):
     lam = np.exp(log_alpha[home_idx] + log_beta[away_idx] + log_gamma)
     mu  = np.exp(log_alpha[away_idx] + log_beta[home_idx])
 
-    nll     = -(poisson.logpmf(goals_h, lam).sum() + poisson.logpmf(goals_a, mu).sum())
-    penalty = 0.5 * PEN * ((log_alpha[1:] ** 2).sum() + (log_beta **2).sum())
-
-    # return nll + penalty
     return (lam - goals_h * np.log(lam)).sum() + (mu - goals_a * np.log(mu)).sum()
 
 def neg_log_likelihood_grad(params, n_teams, home_idx, away_idx, goals_h, goals_a):
@@ -40,9 +34,6 @@ def neg_log_likelihood_grad(params, n_teams, home_idx, away_idx, goals_h, goals_
                + np.bincount(away_idx, res_a, minlength=n_teams))
     d_beta  = (np.bincount(away_idx, res_h, minlength=n_teams)
                    + np.bincount(home_idx, res_a, minlength=n_teams))
-
-    d_alpha[1:] += PEN * log_alpha[1:]
-    d_beta      += PEN * log_beta
 
     return np.concatenate([d_alpha[1:], d_beta, [res_h.sum()]])
 
