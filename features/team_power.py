@@ -1,26 +1,45 @@
 import numpy as np
 import pandas as pd
+import numpy as np
 from scipy.optimize import minimize
 from scipy.stats import poisson
 from dateutil.relativedelta import relativedelta
 
 MIN_MATCHES = 100  # rough heuristic: enough matchdays for a well-posed fit
+PEN = 1e-3
 
+def _unpack(params, n_teams):
+    log_alpha     = np.zeros(n_teams)
+    log_alpha[1:] = params[:n_teams -1]
+    return log_alpha, params[n_teams - 1:2 * n_teams -1], params[-1]
 
-def neg_log_likelihood(params, teams, home_idx, away_idx, goals_h, goals_a):
-    n = len(teams)
-
-    log_alpha = np.zeros(n)
-    log_alpha[1:] = params[:n-1]        # team 0 = reference, alpha fixed to 1 (log=0)
-
-    log_beta  = params[n-1:2*n-1]
-    log_gamma = params[-1]
-
+def neg_log_likelihood(params, n_teams, home_idx, away_idx, goals_h, goals_a):
+    log_alpha, log_beta, log_gamma = _unpack(params, n_teams)
     lam = np.exp(log_alpha[home_idx] + log_beta[away_idx] + log_gamma)
     mu  = np.exp(log_alpha[away_idx] + log_beta[home_idx])
 
-    return -(poisson.logpmf(goals_h, lam).sum() + poisson.logpmf(goals_a, mu).sum())
+    nll     = -(poisson.logpmf(goals_h, lam).sum() + poisson.logpmf(goals_a, mu).sum())
+    penalty = 0.5 * PEN * ((log_alpha[1:] ** 2).sum() + (log_beta **2).sum())
 
+    return nll + penalty
+
+def neg_log_likelihood_grad(params, n_teams, home_idx, away_idx, goals_h, goals_a):
+    log_alpha, log_beta, log_gamma = _unpack(params, n_teams)
+    lam = np.exp(log_alpha[home_idx] + log_beta[away_idx] + log_gamma)
+    mu  = np.exp(log_alpha[away_idx] + log_beta[home_idx])
+
+    res_h = lam - goals_h
+    res_a = mu - goals_a
+
+    d_alpha = (np.bincount(home_idx, res_h, minlength=n_teams)
+               + np.bincount(away_idx, res_a, minlength=n_teams))
+    d_beta  = (np.bincount(away_idx, res_h, minlength=n_teams)
+                   + np.bincount(home_idx, res_a, minlength=n_teams))
+
+    d_alpha[1:] += PEN * log_alpha[1:]
+    d_beta      += PEN * log_beta
+
+    return np.concatenate([d_alpha[1:], d_beta, [res_h.sum()]])
 
 def fit_team_power(df_matches: pd.DataFrame) -> pd.DataFrame:
     """
@@ -39,31 +58,46 @@ def fit_team_power(df_matches: pd.DataFrame) -> pd.DataFrame:
     n_matches = len(df_matches)
     home_idx = codes[:n_matches]
     away_idx = codes[n_matches:]
-    goals_h = df_matches["goals_h"].to_numpy()
-    goals_a = df_matches["goals_a"].to_numpy()
+    goals_h = df_matches["goals_h"].to_numpy(dtype=float)
+    goals_a = df_matches["goals_a"].to_numpy(dtype=float)
 
     n_teams = len(teams)
-    gamma_init = df_matches["goals_h"].sum() / df_matches["goals_a"].sum()
 
     # (n_teams - 1) alphas libres + n_teams betas + 1 gamma
-    x0 = np.array([1.0] * (n_teams - 1) + [1.0] * n_teams + [gamma_init])
+    mean_h, mean_a = goals_h.mean(), goals_a.mean()
+    x0 = np.concatenate([
+        np.zeros(n_teams - 1),
+        np.full(n_teams, np.log(mean_a)),
+        [np.log(mean_h / mean_a)]
+    ])
+
+    args = (n_teams, home_idx, away_idx, goals_h, goals_a)
 
     result = minimize(
         neg_log_likelihood,
         x0=x0,
-        args=(teams, home_idx, away_idx, goals_h, goals_a),
-        options={"gtol": 1e-4},
+        args=args,
+        jac=neg_log_likelihood_grad,
+        method="BFGS"
     )
 
-    alpha = np.concatenate([[1.0], np.exp(result.x[:n_teams - 1])])
-    beta  = np.exp(result.x[n_teams - 1:2 * n_teams - 1])
-    gamma = np.exp(result.x[-1])
+    if not result.success:
+        raise RuntimeError(
+            f"fit_team_poxer: no covergence ({result.message}) - "
+            f"max residual {np.max(np.abs(result.jac))} goals, NLL {result.fun:.2f}"
+        )
 
+    log_alpha, log_beta, log_gamma = _unpack(result.x, n_teams)
+
+    m = log_alpha.mean()
+    log_alpha = log_alpha - m
+    log_beta = log_beta + m
+    
     return pd.DataFrame({
         "team": teams,
-        "off_power": alpha,
-        "def_power": beta,
-        "gamma": gamma,
+        "off_power": np.exp(log_alpha),
+        "def_power": np.exp(log_beta),
+        "gamma": np.exp(log_gamma),
     })
 
 
@@ -126,6 +160,12 @@ def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -
     Returns:
         df_calendar with added 'off_power_h', 'def_power_h', 'off_power_a', 'def_power_a', 'gamma' columns
     """
+    PROMOTED_FILL = {
+        "off_power_h": 0.6, "def_power_h": 1.4,
+        "off_power_a": 0.6, "def_power_a": 1.4,
+    }
+    GAMMA_FILL = 1.3
+
     played = df_calendar.dropna(subset=["goals_h", "goals_a"]).copy()
     played["datetime"] = pd.to_datetime(played["datetime"])
     played = played.sort_values("datetime")
@@ -163,7 +203,18 @@ def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -
     df_calendar_power = add_last_gamma(df_calendar_power, df_power)
 
     power_cols = ["off_power_h", "def_power_h", "off_power_a", "def_power_a", "gamma"]
-    df_calendar_power[power_cols] = df_calendar_power[power_cols].fillna(1)
+
+    early = df_calendar_power["gamma"].isna()
+
+    # Initial period : no info on no one -> neutral (1)
+    df_calendar_power.loc[early, power_cols] = 1.0
+    df_calendar_power["gamma"] = df_calendar_power["gamma"].fillna(GAMMA_FILL)
+
+    # Rest of NaN : promoted teams
+    n_promoted = df_calendar_power[power_cols].isna().any(axis=1).sum()
+    df_calendar_power = df_calendar_power.fillna(PROMOTED_FILL)
+
+    print(f"team_power : {early.sum()} games before snapshot, {n_promoted} games with promoted team")
 
     return df_calendar_power
 
