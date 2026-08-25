@@ -6,9 +6,9 @@ from database.get_cloud_db import DB_PATH
 
 # ── Transform ─────────────────────────────────────────────────────────────────
 
-def player_to_df(player: dict) -> pd.DataFrame:
+def player_to_df(player: dict, season: str) -> pd.DataFrame:
     return pd.DataFrame([{
-        'id':           player['id'],
+        'id':           f"{player['id']}_{season}",
         'player_name':  player['player_name'],
         'games':        player['games'],
         'time':         player['time'],
@@ -28,8 +28,8 @@ def player_to_df(player: dict) -> pd.DataFrame:
         'xGBuildup':    player['xGBuildup'],
     }])
 
-def players_to_df(players: list[dict]) -> pd.DataFrame:
-    return pd.concat([player_to_df(m) for m in players], ignore_index=True)
+def players_to_df(players: list[dict], season: str) -> pd.DataFrame:
+    return pd.concat([player_to_df(m, season) for m in players], ignore_index=True)
 
 
 # ── Main function ─────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ def get_players_stats(season: str = "2025"):
     understat = UnderstatClient()
     player_data = understat.league(league="EPL").get_player_data(season=season)
 
-    df = players_to_df(player_data)
+    df = players_to_df(player_data, season)
 
     con = sqlite3.connect(DB_PATH)
     existing_ids = pd.read_sql_query("SELECT id FROM players_stats;", con)["id"].tolist()
