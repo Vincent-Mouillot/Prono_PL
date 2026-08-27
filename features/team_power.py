@@ -9,46 +9,55 @@ from database import DB_PATH
 
 MIN_MATCHES = 100  # rough heuristic: enough matchdays for a well-posed fit
 GRAD_TOL = 1e-2
+HALF_LIFE_DAYS = 180 
 
 def _unpack(params, n_teams):
     log_alpha     = np.zeros(n_teams)
     log_alpha[1:] = params[:n_teams -1]
     return log_alpha, params[n_teams - 1:2 * n_teams -1], params[-1]
 
-def neg_log_likelihood(params, n_teams, home_idx, away_idx, goals_h, goals_a):
+def neg_log_likelihood(params, n_teams, home_idx, away_idx, goals_h, goals_a, w):
     log_alpha, log_beta, log_gamma = _unpack(params, n_teams)
     lam = np.exp(log_alpha[home_idx] + log_beta[away_idx] + log_gamma)
     mu  = np.exp(log_alpha[away_idx] + log_beta[home_idx])
 
-    return (lam - goals_h * np.log(lam)).sum() + (mu - goals_a * np.log(mu)).sum()
+    return (w * (lam - goals_h * np.log(lam))).sum() + (w * (mu - goals_a * np.log(mu))).sum()
 
-def neg_log_likelihood_grad(params, n_teams, home_idx, away_idx, goals_h, goals_a):
+
+def neg_log_likelihood_grad(params, n_teams, home_idx, away_idx, goals_h, goals_a, w):
     log_alpha, log_beta, log_gamma = _unpack(params, n_teams)
     lam = np.exp(log_alpha[home_idx] + log_beta[away_idx] + log_gamma)
     mu  = np.exp(log_alpha[away_idx] + log_beta[home_idx])
 
-    res_h = lam - goals_h
-    res_a = mu - goals_a
+    res_h = w * (lam - goals_h)
+    res_a = w * (mu - goals_a)
 
     d_alpha = (np.bincount(home_idx, res_h, minlength=n_teams)
                + np.bincount(away_idx, res_a, minlength=n_teams))
     d_beta  = (np.bincount(away_idx, res_h, minlength=n_teams)
-                   + np.bincount(home_idx, res_a, minlength=n_teams))
+               + np.bincount(home_idx, res_a, minlength=n_teams))
 
     return np.concatenate([d_alpha[1:], d_beta, [res_h.sum()]])
 
-def fit_team_power(df_matches: pd.DataFrame) -> pd.DataFrame:
+def fit_team_power(df_matches: pd.DataFrame,
+                   ref_date=None,
+                   half_life_days: float = HALF_LIFE_DAYS) -> pd.DataFrame:
     """
     Fit Dixon-Coles attack (alpha), defense (beta) and home advantage (gamma)
-    by maximum likelihood on a fixed set of played matches.
+    by weighted maximum likelihood on a fixed set of played matches.
+
+    Chaque match est pondéré par exp(-xi * age_en_jours), xi = ln(2)/half_life_days.
+    Les poids sont normalisés à moyenne 1 pour que l'échelle du gradient reste
+    comparable à la version non pondérée (cf. GRAD_TOL).
 
     Args:
-        df_matches: played matches with 'h_team', 'a_team', 'goals_h', 'goals_a'.
+        df_matches: played matches with 'datetime', 'h_team', 'a_team', 'goals_h', 'goals_a'.
             Date filtering must be done by the caller — this fits on whatever it's given.
+        ref_date: date de référence pour l'âge des matchs. Par défaut, le match le plus récent.
+        half_life_days: demi-vie de la pondération, en jours.
 
     Returns:
-        One row per team, with columns 'team', 'off_power', 'def_power', 'gamma'
-        ('gamma' is a single league-wide value, repeated on every row for easy merging).
+        One row per team, with columns 'team', 'off_power', 'def_power', 'gamma'.
     """
     codes, teams = pd.factorize(pd.concat([df_matches["h_team"], df_matches["a_team"]]))
     n_matches = len(df_matches)
@@ -59,15 +68,26 @@ def fit_team_power(df_matches: pd.DataFrame) -> pd.DataFrame:
 
     n_teams = len(teams)
 
+    # ── Poids temporels ───────────────────────────────────────────────────────
+    dates = pd.to_datetime(df_matches["datetime"])
+    if ref_date is None:
+        ref_date = dates.max()
+    age_days = (pd.Timestamp(ref_date) - dates).dt.total_seconds().to_numpy() / 86400.0
+
+    xi = np.log(2) / half_life_days
+    w = np.exp(-xi * age_days)
+    w = w / w.mean()  # moyenne 1 → gradient à la même échelle qu'avant
+
     # (n_teams - 1) alphas libres + n_teams betas + 1 gamma
-    mean_h, mean_a = goals_h.mean(), goals_a.mean()
+    mean_h = np.average(goals_h, weights=w)
+    mean_a = np.average(goals_a, weights=w)
     x0 = np.concatenate([
         np.zeros(n_teams - 1),
         np.full(n_teams, np.log(mean_a)),
         [np.log(mean_h / mean_a)]
     ])
 
-    args = (n_teams, home_idx, away_idx, goals_h, goals_a)
+    args = (n_teams, home_idx, away_idx, goals_h, goals_a, w)
 
     result = minimize(
         neg_log_likelihood,
@@ -163,7 +183,7 @@ def add_npxg(df_calendar: pd.DataFrame) -> pd.DataFrame:
     return calendar
 
 
-def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -> pd.DataFrame:
+def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 24) -> pd.DataFrame:
     """
     Compute Dixon-Coles off_power/def_power/gamma for each date where a game is played,
     using only matches from the trailing `nb_months` window strictly before that date
@@ -210,7 +230,7 @@ def compute_team_power_feature(df_calendar: pd.DataFrame, nb_months: int = 12) -
         if len(window) < MIN_MATCHES:
             continue
 
-        power = fit_team_power(window)
+        power = fit_team_power(window, ref_date=window_end)
         power["datetime"] = window_end
         snapshots.append(power)
 
