@@ -11,7 +11,7 @@ from database import DB_PATH, init_db, check_db_exists, download_db, upload_db, 
 from scrapers import get_calendar, get_players_stats, get_teams_stats
 
 # Features
-from features import compute_ewp_feature, compute_ranking_feature, compute_team_power_feature
+from features import compute_ewp_feature, compute_ranking_feature, compute_team_power_feature, compute_chance_creation_feature
 
 # ML
 from ml import preprocessing_function, train, predictions, fit_rho, score_matrices, days_since_last_training
@@ -104,6 +104,10 @@ def task_compute_ewp(df: pd.DataFrame) -> pd.DataFrame:
 def task_compute_team_power(df: pd.DataFrame) -> pd.DataFrame:
     return compute_team_power_feature(df)
 
+@task(name="Compute rolling chance creation (deep/deep_allowed)", retries=2, retry_delay_seconds=30)
+def task_compute_chance_creation(df: pd.DataFrame) -> pd.DataFrame:
+    return compute_chance_creation_feature(df)
+
 # ── ML tasks ──────────────────────────────────────────────────────────────────
 
 @task(name="Preprocess data into long format", retries=2, retry_delay_seconds=30)
@@ -190,8 +194,9 @@ def features_flow(force_compute: bool = False):
             existing_other_seasons = existing.loc[existing_season != current_season, df_current.columns]
             df_all = pd.concat([existing_other_seasons, df_current], ignore_index=True)
 
-    df_all = task_compute_ewp(df_all)
+    #df_all = task_compute_ewp(df_all)
     df_all = task_compute_team_power(df_all)
+    df_all = task_compute_chance_creation(df_all)
 
     # Write all features to DB — replace since we recompute everything
     con = sqlite3.connect(DB_PATH)

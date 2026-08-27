@@ -13,18 +13,19 @@ def neutralize_col(col):
 # Features
 
 team_features = {
-    'ranking'  : ['diff_rank'],
     'ewp'      : ['ewp_saison', 'ewp_window'],
-    'power'    : ['off_power', 'def_power'],
+    'power'    : ['off_power'],
+    'creation' : ['deep'],
     'target'   : ['npxg'],
 }
 
 opp_features = {
-    'ewp'   : ['ewp_saison', 'ewp_window'],
-    'power' : ['off_power', 'def_power'],
+    'ewp'      : ['ewp_saison', 'ewp_window'],
+    'power'    : ['def_power'],
+    'creation' : ['deep_allowed'],
 }
 
-DC_POWER_COLS = ["off_power", "def_power", "off_power_opp", "def_power_opp"]
+LOG_COLS = ["off_power", "def_power_opp", "deep", "deep_allowed_opp"]
 
 NON_FEATURE_COLS = ["id", "datetime", "npxg", "is_home"]
 
@@ -56,10 +57,20 @@ def build_side(df : pd.DataFrame, home_map, away_map, is_home):
 
 def to_log_powers(df_long: pd.DataFrame) -> pd.DataFrame:
     """Pour un arbre c'est un no-op (transfo monotone → mêmes splits).
-    Pour un GLM à lien log, c'est ce qui rend la structure DC exactement linéaire."""
-    for col in DC_POWER_COLS:
+    Pour un GLM à lien log, ça rend la structure DC exactement linéaire pour
+    off_power/def_power_opp, et ça traite ppda_opp comme un facteur
+    multiplicatif du même genre plutôt qu'un terme linéaire additif."""
+    for col in LOG_COLS:
         df_long[f"log_{col}"] = np.log(df_long[col].clip(lower=1e-6))
-    return df_long.drop(columns=DC_POWER_COLS)
+    return df_long.drop(columns=LOG_COLS)
+
+def add_interactions(df_long: pd.DataFrame) -> pd.DataFrame:
+    """log_deep + log_deep_allowed_opp, replacing the two individual terms: only
+    the interaction enters the model, capturing whether a team's own chance
+    creation compounds specifically against sides that leak deep completions,
+    without also giving each side an independent additive effect."""
+    df_long["log_deep_product"] = df_long["log_deep"] + df_long["log_deep_allowed_opp"]
+    return df_long.drop(columns=["log_deep", "log_deep_allowed_opp"])
 
 def preprocessing_function(df_calendar : pd.DataFrame):
     df = df_calendar.copy()
@@ -70,7 +81,8 @@ def preprocessing_function(df_calendar : pd.DataFrame):
 
     df_long = pd.concat([build_side(df, home_map, away_map, True), build_side(df, home_map, away_map, False)]).reset_index(drop=True)
 
-    return to_log_powers(df_long)
+    df_long = to_log_powers(df_long)
+    return add_interactions(df_long)
 
 if __name__ == "__main__":
     calendar = pd.read_csv("df_calendar.csv")
