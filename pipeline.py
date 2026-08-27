@@ -11,13 +11,13 @@ from database import DB_PATH, init_db, check_db_exists, download_db, upload_db, 
 from scrapers import get_calendar, get_players_stats, get_teams_stats
 
 # Features
-from features import compute_ewp_feature, compute_ranking_feature, compute_team_power_feature, compute_chance_creation_feature
+from features import compute_ewp_feature, compute_team_power_feature, compute_chance_creation_feature
 
 # ML
 from ml import preprocessing_function, train, predictions, fit_rho, score_matrices, days_since_last_training
 
 # Utils
-from utils import get_current_season, get_season_from_date, match_selection, compute_proba, compute_score, display_predictions
+from utils import get_current_season, match_selection, compute_proba, compute_score, display_predictions
 
 TRAINING_INTERVAL_DAYS = 30
 
@@ -80,21 +80,8 @@ def task_load_features() -> pd.DataFrame:
     con.close()
     return df
 
-@task(name="Load available seasons from DB")
-def task_load_seasons() -> list:
-    con = sqlite3.connect(DB_PATH)
-    seasons = pd.read_sql_query(
-        "SELECT DISTINCT season FROM teams_stats ORDER BY season;", con
-    )["season"].tolist()
-    con.close()
-    return seasons
-
 
 # ── Features tasks ────────────────────────────────────────────────────────────
-
-@task(name="Compute ranking difference", retries=2, retry_delay_seconds=30)
-def task_compute_ranking(df_calendar: pd.DataFrame, season: str) -> pd.DataFrame:
-    return compute_ranking_feature(df_calendar, season)
 
 @task(name="Compute EWP", retries=2, retry_delay_seconds=30)
 def task_compute_ewp(df: pd.DataFrame) -> pd.DataFrame:
@@ -166,42 +153,17 @@ def database_upload_flow():
     task_upload_db()
 
 @flow(name="Compute features")
-def features_flow(force_compute: bool = False):
-    """Compute features and write to the features table.
+def features_flow():
+    """Compute features and write to the features table."""
+    df_all = task_load_games()
 
-    force_compute=True recomputes the ranking for every season from scratch.
-    force_compute=False (default) only recomputes the ranking for the current
-    season — past seasons' ranking never changes once played — and reuses
-    what's already stored in DB for the rest.
-    """
-    df_games = task_load_games()
-    seasons = task_load_seasons()
-
-    if force_compute:
-        # Compute ranking per season then concatenate
-        df_all = pd.concat([
-            task_compute_ranking(df_games, str(season)) for season in seasons
-        ], ignore_index=True)
-    else:
-        current_season = get_current_season()
-        df_current = task_compute_ranking(df_games, current_season)
-
-        existing = task_load_features()
-        if existing.empty:
-            df_all = df_current
-        else:
-            existing_season = pd.to_datetime(existing["datetime"]).apply(get_season_from_date)
-            existing_other_seasons = existing.loc[existing_season != current_season, df_current.columns]
-            df_all = pd.concat([existing_other_seasons, df_current], ignore_index=True)
-
-    #df_all = task_compute_ewp(df_all)
     df_all = task_compute_team_power(df_all)
     df_all = task_compute_chance_creation(df_all)
 
     # Write all features to DB — replace since we recompute everything
     con = sqlite3.connect(DB_PATH)
     df_all.to_sql("features", con, if_exists="replace", index=False)
-    print(f"Features written — {len(df_all)} rows across {len(seasons)} seasons")
+    print(f"Features written — {len(df_all)} rows")
     con.close()
 
 @flow(name="Training flow")
@@ -250,7 +212,7 @@ def save_predictions_flow(df_predicted: Optional[pd.DataFrame]) -> Optional[str]
 # ── Pipelines ─────────────────────────────────────────────────────────────────
 
 @flow(name="Prono PL full pipeline")
-def full_pipeline(seasons: Optional[list] = None, force_train: bool = False, force_compute: bool = False):
+def full_pipeline(seasons: Optional[list] = None, force_train: bool = False):
     """Full pipeline — scrape per season, then features + training on all."""
     if seasons is None:
         seasons = [get_current_season()]
@@ -263,7 +225,7 @@ def full_pipeline(seasons: Optional[list] = None, force_train: bool = False, for
         scraping_flow(season)
 
     # 3. Features on all seasons
-    features_flow(force_compute=force_compute)
+    features_flow()
 
     # 4. Upload DB once (scrap data and features)
     database_upload_flow()
