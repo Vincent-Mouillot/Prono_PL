@@ -16,6 +16,7 @@ MLFLOW_TRACKING_URI = "sqlite:///" + str(Path(__file__).resolve().parent.parent 
 MLFLOW_EXPERIMENT_NAME = "Prono_PL"
 
 MODEL_PARAMS = {"alpha": 1e-6, "max_iter": 1000}
+MIN_TEST_ROWS = 200
 
 def make_model():
     return PoissonRegressor(**MODEL_PARAMS)
@@ -51,9 +52,14 @@ def _prepare_training_data(df: pd.DataFrame):
     seasons = df_train["season"]
 
     cv_splits = [
-        (seasons[seasons < season].index.to_numpy(), seasons[seasons == season].index.to_numpy())
+        (season,
+         seasons[seasons < season].index.to_numpy(),
+         seasons[seasons == season].index.to_numpy())
         for season in sorted(seasons.unique())[1:]
     ]
+    cv_splits = [s for s in cv_splits if len(s[2]) >= MIN_TEST_ROWS]
+
+    return X, y, seasons, cv_splits
 
     return X, y, seasons, cv_splits
 
@@ -69,7 +75,7 @@ def train(df: pd.DataFrame):
     dev_scores = []
 
     with mlflow.start_run(run_name="xg_timeseries_cv"):
-        for season, (train_idx, test_idx) in zip(sorted(seasons.unique())[1:], cv_splits):
+        for season, train_idx, test_idx in cv_splits:
             X_train, X_test = X.loc[train_idx], X.loc[test_idx]
             y_train, y_test = y.loc[train_idx], y.loc[test_idx]
 
