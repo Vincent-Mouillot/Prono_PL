@@ -13,14 +13,12 @@ def neutralize_col(col):
 # Features
 
 team_features = {
-    'ewp'      : ['ewp_saison', 'ewp_window'],
     'power'    : ['off_power'],
     'creation' : ['deep'],
     'target'   : ['npxg'],
 }
 
 opp_features = {
-    'ewp'      : ['ewp_saison', 'ewp_window'],
     'power'    : ['def_power'],
     'creation' : ['deep_allowed'],
 }
