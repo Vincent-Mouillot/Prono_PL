@@ -1,3 +1,3 @@
 from scrapers.get_calendar import get_calendar, match_to_df, matches_to_df
-from scrapers.get_players_stats import get_players_stats
+from scrapers.get_players_stats import get_players_match_stats
 from scrapers.get_teams_stats import get_teams_stats

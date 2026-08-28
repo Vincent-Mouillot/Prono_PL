@@ -8,7 +8,7 @@ from typing import Optional
 from database import DB_PATH, init_db, check_db_exists, download_db, upload_db, save_predictions
 
 # Scrapers
-from scrapers import get_calendar, get_players_stats, get_teams_stats
+from scrapers import get_calendar, get_players_match_stats, get_teams_stats
 
 # Features
 from features import compute_ewp_feature, compute_team_power_feature, compute_chance_creation_feature
@@ -60,8 +60,8 @@ def task_get_teams_stats(season: str):
     get_teams_stats(season)
 
 @task(name="Scrape players stats", retries=2, retry_delay_seconds=30)
-def task_get_players_stats(season: str):
-    get_players_stats(season)
+def task_get_players_stats():
+    get_players_match_stats()
 
 
 # ── Load tasks ────────────────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ def database_setup_flow():
 def scraping_flow(season: str):
     """Scrape all data sources for a given season."""
     task_get_calendar(season)
-    task_get_players_stats(season)
+    task_get_players_stats()
     task_get_teams_stats(season)
 
 @flow(name="Database upload flow")

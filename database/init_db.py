@@ -42,26 +42,33 @@ def init_db():
         npxGD             REAL
     );
 
-    CREATE TABLE IF NOT EXISTS players_stats (
-        id            TEXT PRIMARY KEY,
-        player_name   TEXT,
-        games         INTEGER,
-        time          INTEGER,
-        goals         INTEGER,
-        xG            REAL,
-        assists       INTEGER,
-        xA            REAL,
-        shots         INTEGER,
-        key_passes    INTEGER,
-        yellow_cards  INTEGER,
-        red_cards     INTEGER,
-        position      TEXT,
-        team_title    TEXT,
-        npg           INTEGER,
-        npxG          REAL,
-        xGChain       REAL,
-        xGBuildup     REAL
+    CREATE TABLE IF NOT EXISTS players_match_stats (
+        id_match     TEXT,
+        id_player    TEXT,
+        player       TEXT,
+        date         TEXT,
+        id_team      TEXT,
+        h_a          TEXT,
+        position     TEXT,
+        time         INTEGER,
+        goals        INTEGER,
+        xG           REAL,
+        assists      INTEGER,
+        xA           REAL,
+        shots        INTEGER,
+        key_passes   INTEGER,
+        xGChain      REAL,
+        xGBuildup    REAL,
+        yellow_card  INTEGER,
+        red_card     INTEGER,
+        PRIMARY KEY (id_match, id_player)
     );
+
+    CREATE INDEX IF NOT EXISTS idx_pms_team_date
+        ON players_match_stats(id_team, date);
+
+    CREATE INDEX IF NOT EXISTS idx_pms_player_date
+        ON players_match_stats(id_player, date);
 
     CREATE TABLE IF NOT EXISTS games (
         id            TEXT PRIMARY KEY,

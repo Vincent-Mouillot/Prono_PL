@@ -1,56 +1,70 @@
-import sqlite3
+# scrapers/get_players_match_stats.py
+import sqlite3, time
 import pandas as pd
 from understatapi import UnderstatClient
 from database.get_cloud_db import DB_PATH
 
-
-# ── Transform ─────────────────────────────────────────────────────────────────
-
-def player_to_df(player: dict, season: str) -> pd.DataFrame:
-    return pd.DataFrame([{
-        'id':           f"{player['id']}_{season}",
-        'player_name':  player['player_name'],
-        'games':        player['games'],
-        'time':         player['time'],
-        'goals':        player['goals'],
-        'xG':           player['xG'],
-        'assists':      player['assists'],
-        'xA':           player['xA'],
-        'shots':        player['shots'],
-        'key_passes':   player['key_passes'],
-        'yellow_cards': player['yellow_cards'],
-        'red_cards':    player['red_cards'],
-        'position':     player['position'],
-        'team_title':   player['team_title'],
-        'npg':          player['npg'],
-        'npxG':         player['npxG'],
-        'xGChain':      player['xGChain'],
-        'xGBuildup':    player['xGBuildup'],
-    }])
-
-def players_to_df(players: list[dict], season: str) -> pd.DataFrame:
-    return pd.concat([player_to_df(m, season) for m in players], ignore_index=True)
+# À ajuster après inspection
+FIELDS = ["player_id", "player", "team_id", "position", "time", "goals",
+          "xG", "assists", "xA", "shots", "key_passes",
+          "xGChain", "xGBuildup", "yellow_card", "red_card"]
 
 
-# ── Main function ─────────────────────────────────────────────────────────────
+def roster_to_df(roster: dict, match_id: str) -> pd.DataFrame:
+    rows = []
+    for side in ("h", "a"):
+        for entry in roster.get(side, {}).values():
+            row = {f: entry.get(f) for f in FIELDS}
+            row["id_match"], row["h_a"] = match_id, side
+            rows.append(row)
+    return pd.DataFrame(rows)
 
-def get_players_stats(season: str = "2025"):
-    """Fetch EPL players stats from Understat and append it to the games table."""
 
-    understat = UnderstatClient()
-    player_data = understat.league(league="EPL").get_player_data(season=season)
+def pending_match_ids(con, limit: int | None = None) -> list[str]:
+    """Matchs joués dont le roster n'est pas encore en base."""
+    df = pd.read_sql_query("""
+        SELECT g.id FROM games g
+        LEFT JOIN players_match_stats p ON p.id_match = g.id
+        WHERE g.goals_h IS NOT NULL AND p.id_match IS NULL
+        GROUP BY g.id ORDER BY g.datetime
+    """, con)
+    return df["id"].tolist()[:limit]
 
-    df = players_to_df(player_data, season)
 
+def get_players_match_stats(limit: int | None = None, delay: float = 1.0):
     con = sqlite3.connect(DB_PATH)
-    existing_ids = pd.read_sql_query("SELECT id FROM players_stats;", con)["id"].tolist()
-    new_rows = df[~df["id"].isin(existing_ids)]
-    if new_rows.empty:
-        print("No new rows to insert")
-    else:
-        new_rows.to_sql("players_stats", con, if_exists="append", index=False)
-        print(f"{len(new_rows)} new rows inserted")
+    pending = pending_match_ids(con, limit)
+    dates = pd.read_sql_query("SELECT id, datetime FROM games;", con)
+
+    frames = []
+    with UnderstatClient() as understat:
+        for i, match_id in enumerate(pending, 1):
+            try:
+                frames.append(roster_to_df(
+                    understat.match(match=match_id).get_roster_data(), match_id))
+            except Exception as e:
+                print(f"{match_id} — skipped: {e}")
+            time.sleep(delay)
+            if i % 50 == 0:
+                print(f"{i}/{len(pending)}")
+
+    if not frames:
+        print("Rien à insérer")
+        con.close()
+        return
+
+    df = pd.concat(frames, ignore_index=True).merge(
+        dates.rename(columns={"id": "id_match", "datetime": "date"}), on="id_match")
+    df = df.rename(columns={"player_id": "id_player", "team_id": "id_team"})
+
+    cols = list(df.columns)
+    con.executemany(
+        f"INSERT OR REPLACE INTO players_match_stats ({','.join(cols)}) "
+        f"VALUES ({','.join('?' * len(cols))})",
+        df.itertuples(index=False, name=None))
+    con.commit()
     con.close()
+    print(f"{len(df)} lignes ({len(frames)} matchs)")
 
 if __name__ == "__main__":
-    get_players_stats()
+    get_players_match_stats()
