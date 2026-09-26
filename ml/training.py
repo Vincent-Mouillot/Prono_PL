@@ -61,8 +61,6 @@ def _prepare_training_data(df: pd.DataFrame):
 
     return X, y, seasons, cv_splits
 
-    return X, y, seasons, cv_splits
-
 
 
 def train(df: pd.DataFrame):
