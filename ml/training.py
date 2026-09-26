@@ -59,7 +59,7 @@ def _prepare_training_data(df: pd.DataFrame):
     ]
     cv_splits = [s for s in cv_splits if len(s[2]) >= MIN_TEST_ROWS]
 
-    return X, y, seasons, cv_splits
+    return X, y, cv_splits
 
 
 
@@ -67,7 +67,7 @@ def train(df: pd.DataFrame):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
-    X, y, seasons, cv_splits = _prepare_training_data(df)
+    X, y, cv_splits = _prepare_training_data(df)
 
     params = MODEL_PARAMS
     dev_scores = []
